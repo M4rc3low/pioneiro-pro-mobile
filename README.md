@@ -4,11 +4,11 @@ Aplicativo mobile do Pioneiro Pro desenvolvido em Python com Flet, com arquitetu
 
 ## Versão atual
 
-**0.4.0**
+**0.5.0**
 
 ## O que já funciona
 
-- dashboard com resumo mensal;
+- dashboard redesenhado com resumo mensal, cards e progresso visual;
 - cronômetro de atividade;
 - registro manual de horas;
 - correção de tempo já salvo pelo histórico;
@@ -23,7 +23,7 @@ Aplicativo mobile do Pioneiro Pro desenvolvido em Python com Flet, com arquitetu
 - agenda com estudos, revisitas, ligações e outros compromissos;
 - conclusão, edição e exclusão de compromissos;
 - lembretes de compromissos com antecedência configurável ao abrir/retomar o aplicativo;
-- tema claro e escuro;
+- tema claro e escuro com identidade visual consistente;
 - onboarding inicial;
 - backup e restauração em JSON;
 - exportação de relatório em CSV;
