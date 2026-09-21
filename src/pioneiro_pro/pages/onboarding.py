@@ -68,7 +68,7 @@ def onboarding_view(
     hero = ft.Container(
         padding=24,
         border_radius=28,
-        bgcolor=ft.Colors.BLUE_700,
+        gradient=brand_gradient(),
         content=ft.Column(
             spacing=10,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
