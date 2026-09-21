@@ -8,6 +8,7 @@ from pioneiro_pro.repositories import ConfiguracaoRepository
 from pioneiro_pro.services import (
     BackupService,
     ExportacaoService,
+    LocalSecurityService,
     background_location_granted,
     get_current_position_with_permission,
 )
@@ -29,6 +30,7 @@ def configuracoes_view(
     backup: BackupService,
     exportacao: ExportacaoService,
     geolocator,
+    seguranca_local: LocalSecurityService,
     on_restored,
 ) -> ft.Control:
     config = configuracoes.todas()
@@ -63,6 +65,10 @@ def configuracoes_view(
     tema_escuro = ft.Switch(
         label="Tema escuro",
         value=config["tema"] == "escuro",
+    )
+    bloqueio_local = ft.Switch(
+        label="Bloquear ao abrir com biometria/PIN",
+        value=config.get("bloqueio_local", "0") == "1",
     )
     mensagem = ft.Text(size=12)
 
@@ -181,6 +187,36 @@ def configuracoes_view(
 
     proximidade_ativa.on_change = alterar_proximidade
 
+    async def alterar_bloqueio_local(event):
+        if not event.control.value:
+            configuracoes.definir("bloqueio_local", "0")
+            set_mensagem("Bloqueio local desativado.")
+            return
+
+        suportado = await seguranca_local.is_supported()
+        if not suportado:
+            event.control.value = False
+            event.control.update()
+            set_mensagem(
+                "Este aparelho não oferece autenticação local compatível.",
+                False,
+            )
+            return
+
+        autenticado = await seguranca_local.authenticate(
+            "Confirme sua identidade para ativar o bloqueio do Pioneiro Pro."
+        )
+        if not autenticado:
+            event.control.value = False
+            event.control.update()
+            set_mensagem("Não foi possível ativar o bloqueio local.", False)
+            return
+
+        configuracoes.definir("bloqueio_local", "1")
+        set_mensagem("Bloqueio por biometria/PIN ativado.")
+
+    bloqueio_local.on_change = alterar_bloqueio_local
+
     def salvar(_):
         try:
             mensal = max(0, int(float(meta_mes.value or 0)))
@@ -204,6 +240,10 @@ def configuracoes_view(
         configuracoes.definir(
             "tema",
             "escuro" if tema_escuro.value else "claro",
+        )
+        configuracoes.definir(
+            "bloqueio_local",
+            "1" if bloqueio_local.value else "0",
         )
 
         page.theme_mode = (
@@ -393,6 +433,28 @@ def configuracoes_view(
             section_header(
                 "Dados e segurança",
                 subtitle="Proteja e mova seus dados quando precisar.",
+            ),
+            panel(
+                ft.Column(
+                    spacing=8,
+                    controls=[
+                        section_header(
+                            "Proteção do aplicativo",
+                            subtitle="Use a segurança já configurada no seu aparelho.",
+                            trailing=icon_badge(
+                                ft.Icons.LOCK_OUTLINE,
+                                color=ft.Colors.TEAL_500,
+                            ),
+                        ),
+                        bloqueio_local,
+                        ft.Text(
+                            "Quando ativado, o Pioneiro Pro exige biometria, PIN, "
+                            "senha ou padrão do próprio aparelho para abrir.",
+                            size=11,
+                            color=ft.Colors.GREY_500,
+                        ),
+                    ],
+                )
             ),
             action_tile(
                 "Criar backup",
