@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.5.0 — 2026-09-21
+
+### Interface
+- novo design system centralizado;
+- cards com borda suave, profundidade e melhor contraste;
+- gradientes discretos na identidade principal;
+- dashboard redesenhado;
+- cronômetro com visual de destaque;
+- onboarding renovado;
+- navegação inferior refinada;
+- cabeçalhos e seções padronizados;
+- chips de status e estados vazios mais claros;
+- melhorias específicas para tema escuro;
+- perfil de estudante, agenda, relatórios e configurações unificados visualmente.
+
+### Qualidade
+- smoke tests das oito telas principais;
+- análise estática com Ruff;
+- validação de dependências;
+- testes de migração e backup da versão atual;
+- suíte automatizada completa antes do build mobile.
+
+
 ## 0.4.0 — 2026-09-21
 
 ### Proximidade
