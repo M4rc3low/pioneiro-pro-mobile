@@ -112,6 +112,8 @@ def test_construcao_das_telas_principais(tmp_path):
             exportacao,
             geolocator,
             seguranca,
+            None,
+            lambda: None,
             lambda: None,
         ),
         onboarding_view(
