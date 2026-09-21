@@ -63,9 +63,8 @@ icon_background = "#FFFFFF"
 "android.permission.ACCESS_FINE_LOCATION" = true
 "android.permission.ACCESS_COARSE_LOCATION" = true
 "android.permission.ACCESS_BACKGROUND_LOCATION" = true
-"android.permission.FOREGROUND_SERVICE" = true
-"android.permission.FOREGROUND_SERVICE_LOCATION" = true
 "android.permission.POST_NOTIFICATIONS" = true
+"android.permission.RECEIVE_BOOT_COMPLETED" = true
 
 [tool.flet.ios.info]
 NSLocationWhenInUseUsageDescription = "O Pioneiro Pro usa sua localização para avisar quando você estiver perto de uma visita ou estudante cadastrado."
