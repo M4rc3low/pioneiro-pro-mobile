@@ -33,10 +33,18 @@ def patch_main(main_dart: Path) -> None:
     text = main_dart.read_text(encoding="utf-8")
 
     if IMPORT_LINE not in text:
-        marker = "const bool isProduction"
-        if marker not in text:
-            raise RuntimeError("Ponto de importação do main.dart não encontrado.")
-        text = text.replace(marker, f"{IMPORT_LINE}\n\n{marker}", 1)
+        import_marker = "import 'package:flet/flet.dart';"
+        if import_marker in text:
+            text = text.replace(
+                import_marker,
+                f"{import_marker}\n{IMPORT_LINE}",
+                1,
+            )
+        else:
+            marker = "const bool isProduction"
+            if marker not in text:
+                raise RuntimeError("Ponto de importação do main.dart não encontrado.")
+            text = text.replace(marker, f"{IMPORT_LINE}\n\n{marker}", 1)
 
     if EXTENSION_LINE.strip() not in text:
         marker = "List<FletExtension> extensions = [\n"
