@@ -1,7 +1,7 @@
 import flet as ft
 
 from pioneiro_pro.repositories import ConfiguracaoRepository
-from pioneiro_pro.ui import ACCENT, DANGER, SUCCESS, icon_badge, panel
+from pioneiro_pro.ui import ACCENT, DANGER, SUCCESS, brand_gradient, icon_badge, panel
 
 
 def onboarding_view(
