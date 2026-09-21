@@ -101,6 +101,7 @@ def test_construcao_das_telas_principais(tmp_path):
             configuracoes,
             backup,
             exportacao,
+            geolocator,
             lambda: None,
         ),
         onboarding_view(
