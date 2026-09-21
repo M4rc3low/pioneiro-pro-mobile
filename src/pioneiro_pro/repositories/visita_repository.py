@@ -16,14 +16,25 @@ class VisitaRepository:
         tipo: str,
         estudante_id: int | None = None,
         observacao: str = "",
+        lembrar_minutos_antes: int = 30,
     ) -> int:
         with self.database.connect() as connection:
             cursor = connection.execute(
                 """
-                INSERT INTO visitas (estudante_id, data, horario, tipo, observacao)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO visitas (
+                    estudante_id, data, horario, tipo, observacao,
+                    lembrar_minutos_antes, notificado
+                )
+                VALUES (?, ?, ?, ?, ?, ?, 0)
                 """,
-                (estudante_id, data, horario.strip(), tipo, observacao.strip()),
+                (
+                    estudante_id,
+                    data,
+                    horario.strip(),
+                    tipo,
+                    observacao.strip(),
+                    max(0, lembrar_minutos_antes),
+                ),
             )
             return int(cursor.lastrowid)
 
@@ -37,6 +48,8 @@ class VisitaRepository:
                 v.tipo,
                 v.observacao,
                 v.concluida,
+                v.lembrar_minutos_antes,
+                v.notificado,
                 e.nome AS estudante_nome
             FROM visitas v
             LEFT JOIN estudantes e ON e.id = v.estudante_id
@@ -55,7 +68,9 @@ class VisitaRepository:
         with self.database.connect() as connection:
             rows = connection.execute(
                 """
-                SELECT id, data, horario, tipo, observacao, concluida
+                SELECT
+                    id, data, horario, tipo, observacao, concluida,
+                    lembrar_minutos_antes, notificado
                 FROM visitas
                 WHERE estudante_id = ?
                 ORDER BY data DESC, horario DESC, id DESC
@@ -72,12 +87,19 @@ class VisitaRepository:
         tipo: str,
         estudante_id: int | None,
         observacao: str,
+        lembrar_minutos_antes: int = 30,
     ) -> None:
         with self.database.connect() as connection:
             connection.execute(
                 """
                 UPDATE visitas
-                SET estudante_id = ?, data = ?, horario = ?, tipo = ?, observacao = ?
+                SET estudante_id = ?,
+                    data = ?,
+                    horario = ?,
+                    tipo = ?,
+                    observacao = ?,
+                    lembrar_minutos_antes = ?,
+                    notificado = 0
                 WHERE id = ?
                 """,
                 (
@@ -86,6 +108,7 @@ class VisitaRepository:
                     horario.strip(),
                     tipo,
                     observacao.strip(),
+                    max(0, lembrar_minutos_antes),
                     visita_id,
                 ),
             )
@@ -95,6 +118,13 @@ class VisitaRepository:
             connection.execute(
                 "UPDATE visitas SET concluida = ? WHERE id = ?",
                 (1 if concluida else 0, visita_id),
+            )
+
+    def marcar_notificado(self, visita_id: int) -> None:
+        with self.database.connect() as connection:
+            connection.execute(
+                "UPDATE visitas SET notificado = 1 WHERE id = ?",
+                (visita_id,),
             )
 
     def excluir(self, visita_id: int) -> None:
