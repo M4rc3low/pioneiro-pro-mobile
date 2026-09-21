@@ -11,6 +11,8 @@ class ConfiguracaoRepository:
         "meta_horas_ano": "600",
         "tema": "claro",
         "onboarding_concluido": "0",
+        "proximidade_ativa": "1",
+        "raio_proximidade_padrao": "200",
     }
 
     def __init__(self, database: Database) -> None:
