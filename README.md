@@ -4,7 +4,7 @@
 [![Mobile Build](https://github.com/M4rc3low/pioneiro-pro-mobile/actions/workflows/build-mobile.yml/badge.svg)](https://github.com/M4rc3low/pioneiro-pro-mobile/actions/workflows/build-mobile.yml)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![Flet](https://img.shields.io/badge/Flet-Mobile-02569B)
-![Version](https://img.shields.io/badge/version-0.5.1-2563EB)
+![Version](https://img.shields.io/badge/version-0.5.2-2563EB)
 
 Aplicativo mobile local-first para organização pessoal de atividades, horas, estudantes, revisitas, agenda, metas e relatórios. Desenvolvido em **Python + Flet**, com persistência em **SQLite**, testes automatizados e pipelines para Android e iOS.
 
@@ -169,4 +169,4 @@ Consulte [docs/PRIVACY.md](docs/PRIVACY.md) para os detalhes.
 
 ## Status
 
-A versão **0.5.1** possui CI validada e pipeline de release/build mobile. A publicação definitiva em Google Play e App Store ainda depende de contas, assinaturas e credenciais das respectivas lojas.
+A versão **0.5.2** possui CI validada e pipeline de release/build mobile. A publicação definitiva em Google Play e App Store ainda depende de contas, assinaturas e credenciais das respectivas lojas.
