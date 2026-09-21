@@ -11,6 +11,7 @@ requires-python = ">=3.10"
 dependencies = [
     "flet==1.0.0",
     "flet-geolocator==1.0.0",
+    "flet-local-auth==1.0.0",
 ]
 
 [tool.setuptools]
@@ -23,6 +24,7 @@ where = ["src"]
 product = "Pioneiro Pro"
 org = "br.com.pioneiropro"
 bundle_id = "br.com.pioneiropro.app"
+permissions = ["biometric"]
 
 [tool.flet.app]
 path = "src"
