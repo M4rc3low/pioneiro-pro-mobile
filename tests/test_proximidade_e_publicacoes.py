@@ -230,3 +230,23 @@ def test_regioes_geofence_refletem_estudantes_e_revisitas(tmp_path):
     # Quando há revisita com localização própria, evitamos uma segunda
     # geofence redundante para o mesmo estudante.
     assert f"estudante:{joao_id}" not in por_id
+
+
+def test_regioes_geofence_respeitam_limite_do_android(tmp_path):
+    db = criar_db(tmp_path)
+    estudantes = EstudanteRepository(db)
+    visitas = VisitaRepository(db)
+
+    for indice in range(105):
+        estudante_id = estudantes.criar(f"Estudante {indice:03d}")
+        estudantes.atualizar_localizacao(
+            estudante_id,
+            -23.5 - indice / 10000,
+            -46.6 - indice / 10000,
+            200,
+        )
+
+    service = ProximidadeService(estudantes, visitas)
+
+    assert len(service.regioes_geofence()) == 100
+    assert len(service.regioes_geofence(limite=25)) == 25
