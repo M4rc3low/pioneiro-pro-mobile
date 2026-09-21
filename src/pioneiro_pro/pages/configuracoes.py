@@ -5,7 +5,12 @@ import flet as ft
 from pioneiro_pro import __version__
 
 from pioneiro_pro.repositories import ConfiguracaoRepository
-from pioneiro_pro.services import BackupService, ExportacaoService
+from pioneiro_pro.services import (
+    BackupService,
+    ExportacaoService,
+    background_location_granted,
+    get_current_position_with_permission,
+)
 from pioneiro_pro.ui import (
     ACCENT,
     DANGER,
@@ -23,6 +28,7 @@ def configuracoes_view(
     configuracoes: ConfiguracaoRepository,
     backup: BackupService,
     exportacao: ExportacaoService,
+    geolocator,
     on_restored,
 ) -> ft.Control:
     config = configuracoes.todas()
@@ -41,8 +47,10 @@ def configuracoes_view(
     )
     proximidade_ativa = ft.Switch(
         label="Avisos por proximidade",
-        value=config.get("proximidade_ativa", "1") == "1",
+        value=config.get("proximidade_ativa", "0") == "1",
     )
+    proximidade_ativa.on_change = alterar_proximidade
+
     raio_padrao = ft.Dropdown(
         label="Raio padrão para novos locais",
         value=config.get("raio_proximidade_padrao", "200"),
@@ -64,6 +72,114 @@ def configuracoes_view(
         mensagem.value = texto
         mensagem.color = SUCCESS if sucesso else DANGER
         mensagem.update()
+
+    async def abrir_configuracoes_localizacao(_=None):
+        page.pop_dialog()
+        await geolocator.open_app_settings()
+
+    def manter_apenas_em_primeiro_plano(_=None):
+        page.pop_dialog()
+        set_mensagem(
+            "Proximidade ativada. Para avisos fora da tela, permita localização "
+            "o tempo todo nas configurações do aparelho."
+        )
+
+    def mostrar_orientacao_background() -> None:
+        page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text("Permitir localização em segundo plano"),
+                content=ft.Text(
+                    "Para tentar avisar quando o Pioneiro Pro não estiver na tela, "
+                    "abra as configurações do aplicativo e escolha a opção de localização "
+                    "que permite acesso o tempo todo. O sistema operacional pode limitar "
+                    "esse funcionamento quando o app é encerrado completamente."
+                ),
+                actions=[
+                    ft.TextButton(
+                        "Agora não",
+                        on_click=manter_apenas_em_primeiro_plano,
+                    ),
+                    ft.FilledButton(
+                        "Abrir configurações",
+                        on_click=abrir_configuracoes_localizacao,
+                    ),
+                ],
+            )
+        )
+
+    async def confirmar_ativacao_proximidade(_=None):
+        page.pop_dialog()
+        resultado = await get_current_position_with_permission(geolocator)
+
+        if not resultado.ok:
+            proximidade_ativa.value = False
+            proximidade_ativa.update()
+
+            if resultado.code == "service_disabled":
+                set_mensagem(
+                    "Ative a localização do aparelho para usar avisos por proximidade.",
+                    False,
+                )
+                await geolocator.open_location_settings()
+                return
+
+            if resultado.code == "permission_permanently_denied":
+                set_mensagem(
+                    "A permissão de localização está bloqueada nas configurações do app.",
+                    False,
+                )
+                await geolocator.open_app_settings()
+                return
+
+            set_mensagem("Permissão de localização não concedida.", False)
+            return
+
+        proximidade_ativa.value = True
+        proximidade_ativa.update()
+        configuracoes.definir("proximidade_ativa", "1")
+
+        if background_location_granted(resultado.permission):
+            set_mensagem("Avisos por proximidade ativados.")
+        else:
+            mostrar_orientacao_background()
+
+    def cancelar_ativacao_proximidade(_=None):
+        page.pop_dialog()
+        proximidade_ativa.value = False
+        proximidade_ativa.update()
+
+    async def alterar_proximidade(event):
+        if not event.control.value:
+            configuracoes.definir("proximidade_ativa", "0")
+            set_mensagem("Avisos por proximidade desativados.")
+            return
+
+        event.control.value = False
+        event.control.update()
+        page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text("Ativar avisos por proximidade?"),
+                content=ft.Text(
+                    "O Pioneiro Pro usa a localização do aparelho para comparar sua "
+                    "posição com estudantes e revisitas que você salvou. Para avisos "
+                    "fora da tela, a localização pode ser usada em segundo plano. "
+                    "Esses dados permanecem no aparelho e não são enviados "
+                    "automaticamente para um servidor."
+                ),
+                actions=[
+                    ft.TextButton(
+                        "Agora não",
+                        on_click=cancelar_ativacao_proximidade,
+                    ),
+                    ft.FilledButton(
+                        "Continuar",
+                        on_click=confirmar_ativacao_proximidade,
+                    ),
+                ],
+            )
+        )
 
     def salvar(_):
         try:
@@ -243,7 +359,9 @@ def configuracoes_view(
                         proximidade_ativa,
                         raio_padrao,
                         ft.Text(
-                            "A localização é comparada localmente com os pontos que você cadastrou.",
+                            "Ao ativar, o app pode usar sua localização em segundo plano "
+                            "para comparar sua posição com locais que você cadastrou. "
+                            "As coordenadas permanecem no aparelho.",
                             size=11,
                             color=ft.Colors.GREY_500,
                         ),
