@@ -7,6 +7,7 @@ from pioneiro_pro.repositories import AtividadeRepository
 from pioneiro_pro.services import CronometroService
 from pioneiro_pro.ui import (
     ACCENT,
+    brand_gradient,
     DANGER,
     SUCCESS,
     WARNING,
@@ -162,7 +163,7 @@ def registrar_view(
     timer_card = ft.Container(
         padding=22,
         border_radius=26,
-        bgcolor=ft.Colors.BLUE_700,
+        gradient=brand_gradient(),
         content=ft.Column(
             spacing=12,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
