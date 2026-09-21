@@ -3,7 +3,7 @@ import flet as ft
 from pioneiro_pro.repositories import EstudanteRepository
 
 
-def estudantes_view(estudantes: EstudanteRepository) -> ft.Control:
+def estudantes_view(estudantes: EstudanteRepository, on_open) -> ft.Control:
     nome = ft.TextField(label="Nome do estudante")
     telefone = ft.TextField(label="Telefone")
     mensagem = ft.Text(size=13)
@@ -18,8 +18,18 @@ def estudantes_view(estudantes: EstudanteRepository) -> ft.Control:
                         content=ft.Text(item["nome"][:1].upper()),
                     ),
                     title=ft.Text(item["nome"]),
-                    subtitle=ft.Text(item["telefone"] or "Sem telefone"),
+                    subtitle=ft.Text(
+                        " • ".join(
+                            parte
+                            for parte in [
+                                item["telefone"] or "",
+                                (item["status"] or "ativo").title(),
+                            ]
+                            if parte
+                        )
+                    ),
                     trailing=ft.Icon(ft.Icons.CHEVRON_RIGHT),
+                    on_click=lambda _, estudante_id=item["id"]: on_open(estudante_id),
                 )
                 for item in dados
             ]
@@ -42,7 +52,7 @@ def estudantes_view(estudantes: EstudanteRepository) -> ft.Control:
             mensagem.update()
             return
 
-        estudantes.criar(nome.value or "", telefone.value or "")
+        novo_id = estudantes.criar(nome.value or "", telefone.value or "")
         nome.value = ""
         telefone.value = ""
         mensagem.value = "Estudante adicionado."
@@ -52,6 +62,7 @@ def estudantes_view(estudantes: EstudanteRepository) -> ft.Control:
         telefone.update()
         mensagem.update()
         lista.update()
+        on_open(novo_id)
 
     carregar()
 
@@ -62,7 +73,7 @@ def estudantes_view(estudantes: EstudanteRepository) -> ft.Control:
         controls=[
             ft.Text("Estudantes", size=26, weight=ft.FontWeight.BOLD),
             ft.Text(
-                "Cadastre e acompanhe seus estudos bíblicos.",
+                "Cadastre, acompanhe e organize seus estudos bíblicos.",
                 color=ft.Colors.GREY_600,
             ),
             ft.Container(
@@ -82,7 +93,7 @@ def estudantes_view(estudantes: EstudanteRepository) -> ft.Control:
                     ]
                 ),
             ),
-            ft.Text("Lista", size=18, weight=ft.FontWeight.BOLD),
+            ft.Text("Meus estudantes", size=18, weight=ft.FontWeight.BOLD),
             lista,
         ],
     )
