@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.2 — 2026-09-21
+
+### Navegação
+- alertas de proximidade agora oferecem a ação **Como chegar**;
+- abertura do Google Maps com estudante ou revisita como destino;
+- rota parte da localização atual do aparelho;
+- navegação de carro solicitada com modo guiado quando disponível.
+
+
 ## 0.5.1 — 2026-09-21
 
 ### Identidade visual
