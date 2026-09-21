@@ -35,3 +35,12 @@ Esta versão aprimora os alertas de proximidade: ao receber um aviso de estudant
 ## Qualidade
 
 A versão passa por validação de dependências, compilação, análise estática, smoke tests das oito telas principais, testes de banco/migração/backup e build mobile Android/iOS.
+
+
+## Polimento visual final
+
+- logo oficial integrado ao cabeçalho e onboarding;
+- superfícies mais limpas, com menos sombra;
+- cabeçalhos e cards mais compactos;
+- melhor aproveitamento de espaço em telas mobile;
+- versão do app exibida automaticamente nas configurações.
