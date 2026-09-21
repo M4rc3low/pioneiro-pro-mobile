@@ -11,25 +11,32 @@
 - [x] Relatório mensal básico
 - [x] Testes iniciais
 
+## Segunda etapa
+- [x] Cronômetro em tempo real
+- [x] Edição e exclusão de atividades
+- [x] Perfil completo de estudantes
+- [x] Histórico de estudos e revisitas
+- [x] Agenda com criação de compromissos
+- [x] Marcar compromissos como concluídos
+- [x] Metas mensais e anuais
+- [x] Progresso visual mensal
+- [x] Tema claro e escuro
+- [x] Configurações persistentes
+
 ## Próxima etapa
-- [ ] Cronômetro em tempo real
-- [ ] Edição e exclusão de atividades
-- [ ] Perfil completo de estudantes
-- [ ] Histórico de estudos e revisitas
-- [ ] Agenda com criação de compromissos
 - [ ] Lembretes e notificações locais
-- [ ] Metas mensais e anuais
-- [ ] Gráficos
-- [ ] Tema claro e escuro
 - [ ] Backup e restauração
 - [ ] Exportação de relatório
 - [ ] Sincronização em nuvem
 - [ ] Autenticação
-- [ ] Testes de integração
+- [ ] Proteção opcional por PIN/biometria
+- [ ] Busca e filtros
+- [ ] Testes de integração de interface
 - [ ] Ícone e splash screen definitivos
+- [ ] Experiência de onboarding
 
 ## Publicação
-- [ ] Definir bundle ID definitivo
+- [ ] Confirmar bundle ID definitivo
 - [ ] Assinatura Android
 - [ ] Google Play Console
 - [ ] Apple Developer
