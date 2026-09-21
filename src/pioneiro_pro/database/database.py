@@ -38,6 +38,12 @@ class Database:
                     telefone TEXT NOT NULL DEFAULT '',
                     status TEXT NOT NULL DEFAULT 'ativo',
                     observacao TEXT NOT NULL DEFAULT '',
+                    endereco TEXT NOT NULL DEFAULT '',
+                    modalidade TEXT NOT NULL DEFAULT '',
+                    horario_preferido TEXT NOT NULL DEFAULT '',
+                    publicacao_atual TEXT NOT NULL DEFAULT '',
+                    licao_atual TEXT NOT NULL DEFAULT '',
+                    data_inicio TEXT NOT NULL DEFAULT '',
                     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
                 );
 
@@ -57,4 +63,47 @@ class Database:
                     valor TEXT NOT NULL
                 );
                 """
+            )
+
+            self._ensure_column(connection, "estudantes", "endereco", "TEXT NOT NULL DEFAULT ''")
+            self._ensure_column(connection, "estudantes", "modalidade", "TEXT NOT NULL DEFAULT ''")
+            self._ensure_column(
+                connection,
+                "estudantes",
+                "horario_preferido",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            self._ensure_column(
+                connection,
+                "estudantes",
+                "publicacao_atual",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            self._ensure_column(
+                connection,
+                "estudantes",
+                "licao_atual",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+            self._ensure_column(
+                connection,
+                "estudantes",
+                "data_inicio",
+                "TEXT NOT NULL DEFAULT ''",
+            )
+
+    @staticmethod
+    def _ensure_column(
+        connection: sqlite3.Connection,
+        table: str,
+        column: str,
+        definition: str,
+    ) -> None:
+        columns = {
+            row["name"]
+            for row in connection.execute(f"PRAGMA table_info({table})").fetchall()
+        }
+        if column not in columns:
+            connection.execute(
+                f"ALTER TABLE {table} ADD COLUMN {column} {definition}"
             )
