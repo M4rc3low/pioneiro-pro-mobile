@@ -44,4 +44,4 @@ A versão atual não possui sincronização automática em nuvem. Caso esse recu
 
 ## Contato
 
-Antes da publicação nas lojas, deve ser definido um endereço de contato público para suporte e privacidade.
+Para suporte e questões de privacidade, consulte [SUPPORT.md](SUPPORT.md). Não publique dados pessoais em chamados públicos.
