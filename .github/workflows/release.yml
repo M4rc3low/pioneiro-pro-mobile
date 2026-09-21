@@ -1,0 +1,188 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versão a publicar, por exemplo v0.3.0"
+        required: true
+        default: "v0.3.0"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Validar versão
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Conferir versão
+        shell: bash
+        run: |
+          VERSION="${{ inputs.version }}"
+
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Versão inválida: $VERSION"
+            exit 1
+          fi
+
+          PROJECT_VERSION="$(python - <<'PY'
+          import tomllib
+          with open("pyproject.toml", "rb") as f:
+              print(tomllib.load(f)["project"]["version"])
+          PY
+          )"
+
+          if [ "$VERSION" != "v$PROJECT_VERSION" ]; then
+            echo "A versão solicitada ($VERSION) não corresponde ao pyproject.toml (v$PROJECT_VERSION)."
+            exit 1
+          fi
+
+  android:
+    name: Android ${{ matrix.target }}
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [apk, aab]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Configurar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.8"
+          channel: stable
+          cache: true
+
+      - name: Instalar projeto
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Construir ${{ matrix.target }}
+        run: flet build ${{ matrix.target }} --no-rich-output --yes
+
+      - name: Publicar artefato temporário
+        uses: actions/upload-artifact@v4
+        with:
+          name: pioneiro-pro-${{ matrix.target }}
+          path: build/${{ matrix.target }}
+          if-no-files-found: error
+          retention-days: 7
+
+  ios-simulator:
+    name: iOS Simulator
+    needs: verify
+    runs-on: macos-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Configurar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.8"
+          channel: stable
+          cache: true
+
+      - name: Instalar projeto
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Construir iOS Simulator
+        run: flet build ios-simulator --no-rich-output --yes
+
+      - name: Publicar artefato temporário
+        uses: actions/upload-artifact@v4
+        with:
+          name: pioneiro-pro-ios-simulator
+          path: build/ios-simulator
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publicar GitHub Release
+    needs: [verify, android, ios-simulator]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Baixar builds
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Preparar arquivos da release
+        shell: bash
+        run: |
+          mkdir -p release
+
+          APK="$(find artifacts -type f -name "*.apk" | head -n 1)"
+          AAB="$(find artifacts -type f -name "*.aab" | head -n 1)"
+
+          if [ -z "$APK" ] || [ -z "$AAB" ]; then
+            echo "APK ou AAB não encontrado."
+            exit 1
+          fi
+
+          cp "$APK" "release/Pioneiro-Pro-${{ inputs.version }}.apk"
+          cp "$AAB" "release/Pioneiro-Pro-${{ inputs.version }}.aab"
+
+          if [ -d "artifacts/pioneiro-pro-ios-simulator" ]; then
+            cd artifacts/pioneiro-pro-ios-simulator
+            zip -r "../../release/Pioneiro-Pro-${{ inputs.version }}-iOS-Simulator.zip" .
+            cd ../..
+          fi
+
+          ls -lh release
+
+      - name: Publicar release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            gh release upload "$VERSION" release/* --clobber
+          else
+            gh release create "$VERSION" release/*               --target "$GITHUB_SHA"               --title "Pioneiro Pro $VERSION"               --notes-file docs/RELEASE_NOTES.md
+          fi
