@@ -2,6 +2,8 @@ from datetime import date
 
 import flet as ft
 
+from pioneiro_pro import __version__
+
 from pioneiro_pro.repositories import ConfiguracaoRepository
 from pioneiro_pro.services import BackupService, ExportacaoService
 from pioneiro_pro.ui import (
@@ -319,7 +321,7 @@ def configuracoes_view(
                                         weight=ft.FontWeight.BOLD,
                                     ),
                                     ft.Text(
-                                        "Versão 0.5.0 • Python + Flet",
+                                        f"Versão {__version__} • Python + Flet",
                                         size=11,
                                         color=ft.Colors.GREY_500,
                                     ),
