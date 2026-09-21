@@ -35,6 +35,21 @@ def registrar_view(
         value="0",
         keyboard_type=ft.KeyboardType.NUMBER,
     )
+    brochuras = ft.TextField(
+        label="Brochuras",
+        value="0",
+        keyboard_type=ft.KeyboardType.NUMBER,
+    )
+    folhetos = ft.TextField(
+        label="Folhetos",
+        value="0",
+        keyboard_type=ft.KeyboardType.NUMBER,
+    )
+    outras_publicacoes = ft.TextField(
+        label="Outras publicações",
+        value="0",
+        keyboard_type=ft.KeyboardType.NUMBER,
+    )
     observacao = ft.TextField(
         label="Observação",
         multiline=True,
@@ -104,6 +119,9 @@ def registrar_view(
             h = max(0, int(horas.value or 0))
             m = max(0, int(minutos.value or 0))
             total = h * 60 + m
+            qtd_brochuras = max(0, int(brochuras.value or 0))
+            qtd_folhetos = max(0, int(folhetos.value or 0))
+            qtd_outras = max(0, int(outras_publicacoes.value or 0))
         except ValueError:
             mensagem.value = "Informe horas e minutos usando apenas números."
             mensagem.color = ft.Colors.RED
@@ -121,6 +139,9 @@ def registrar_view(
             tipo=tipo.value or "ministerio",
             minutos=total,
             observacao=observacao.value or "",
+            brochuras=qtd_brochuras,
+            folhetos=qtd_folhetos,
+            outras_publicacoes=qtd_outras,
         )
         cronometro.zerar()
         on_saved()
@@ -200,6 +221,15 @@ def registrar_view(
                     ft.Container(expand=True, content=minutos),
                 ],
             ),
+            ft.Text("Publicações entregues", size=16, weight=ft.FontWeight.BOLD),
+            ft.Row(
+                spacing=10,
+                controls=[
+                    ft.Container(expand=True, content=brochuras),
+                    ft.Container(expand=True, content=folhetos),
+                ],
+            ),
+            outras_publicacoes,
             observacao,
             mensagem,
             ft.FilledButton(
