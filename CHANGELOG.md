@@ -8,6 +8,19 @@
 - rota parte da localização atual do aparelho;
 - navegação de carro solicitada com modo guiado quando disponível.
 
+### Privacidade e segurança
+- avisos por proximidade passam a ser opt-in em novas instalações;
+- tratamento específico para localização desligada, permissão negada e permissão bloqueada;
+- orientação explícita antes do uso de localização em segundo plano;
+- notificações nativas de proximidade no Android quando o processo continua ativo em segundo plano;
+- bloqueio opcional por biometria ou credencial do próprio aparelho;
+- backup protegido por senha usando PBKDF2-SHA256 e AES-GCM;
+- restauração endurecida contra campos desconhecidos e relações inválidas;
+- backup JSON antigo continua compatível como opção sem senha.
+
+### Limitação conhecida
+- o sistema operacional pode encerrar completamente o processo; monitoramento de proximidade com o app totalmente morto ainda não é garantido.
+
 ### Polimento visual
 - ícone oficial também aparece no topo do app e no onboarding;
 - cards com menos sombra e aparência mais atual;
