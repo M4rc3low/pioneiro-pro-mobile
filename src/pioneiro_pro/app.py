@@ -143,11 +143,13 @@ class PioneiroProApp:
         if self._lembrete_mostrado_hoje and not force:
             return
 
-        mensagem = self.lembretes.mensagem_hoje()
+        itens = self.lembretes.compromissos_para_lembrar()
+        mensagem = self.lembretes.mensagem_pendente()
         if not mensagem:
             return
 
         self._lembrete_mostrado_hoje = True
+        self.lembretes.marcar_exibidos(itens)
         self.page.show_dialog(
             ft.SnackBar(
                 content=ft.Text(mensagem),
