@@ -46,14 +46,51 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e .
+          pip install flet-android-notifications==0.11.2
 
       - name: Verificar ambiente
         run: |
           flutter --version
           flet --version
 
-      - name: Construir ${{ matrix.target }}
-        run: flet build ${{ matrix.target }} --no-rich-output --yes
+      - name: Gerar projeto Flutter e empacotar Python
+        shell: bash
+        run: |
+          set +e
+          flet build ${{ matrix.target }} --no-rich-output --yes
+          FLET_STATUS=$?
+          set -e
+
+          if [ ! -d build/flutter ]; then
+            exit "$FLET_STATUS"
+          fi
+
+      - name: Aplicar suporte a notificações Android
+        run: flet-android-notifications-patch --project-root build/flutter
+
+      - name: Recompilar Android
+        shell: bash
+        working-directory: build/flutter
+        run: |
+          if [ "${{ matrix.target }}" = "apk" ]; then
+            flutter build apk --release
+          else
+            flutter build appbundle --release
+          fi
+
+      - name: Preparar artefato final
+        shell: bash
+        run: |
+          rm -rf "build/${{ matrix.target }}"
+          mkdir -p "build/${{ matrix.target }}"
+
+          if [ "${{ matrix.target }}" = "apk" ]; then
+            cp build/flutter/build/app/outputs/flutter-apk/app-release.apk \
+              "build/apk/Pioneiro-Pro.apk"
+          else
+            cp build/flutter/build/app/outputs/bundle/release/app-release.aab \
+              "build/aab/Pioneiro-Pro.aab"
+          fi
 
       - name: Publicar artefato
         uses: actions/upload-artifact@v7
