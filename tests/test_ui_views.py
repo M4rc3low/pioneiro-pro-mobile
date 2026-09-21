@@ -39,6 +39,14 @@ class DummyGeolocator:
         return None
 
 
+class DummySecurity:
+    async def is_supported(self):
+        return True
+
+    async def authenticate(self, _reason):
+        return True
+
+
 def criar_contexto(tmp_path):
     db = Database(tmp_path / "ui.db")
     db.initialize()
@@ -55,6 +63,7 @@ def test_construcao_das_telas_principais(tmp_path):
 
     page = DummyPage()
     geolocator = DummyGeolocator()
+    seguranca = DummySecurity()
     cronometro = CronometroService()
     exportacao = ExportacaoService(atividades)
     backup = BackupService(db)
@@ -102,6 +111,7 @@ def test_construcao_das_telas_principais(tmp_path):
             backup,
             exportacao,
             geolocator,
+            seguranca,
             lambda: None,
         ),
         onboarding_view(
