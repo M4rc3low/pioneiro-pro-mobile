@@ -127,6 +127,44 @@ class EstudanteRepository:
                 (estudante_id,),
             )
 
+    def buscar(self, texto: str = "", status: str | None = None) -> list[dict]:
+        filtros = []
+        params: list[object] = []
+
+        if texto.strip():
+            termo = f"%{texto.strip()}%"
+            filtros.append(
+                "(nome LIKE ? OR telefone LIKE ? OR endereco LIKE ? OR observacao LIKE ?)"
+            )
+            params.extend([termo, termo, termo, termo])
+
+        if status:
+            filtros.append("status = ?")
+            params.append(status)
+
+        sql = """
+            SELECT
+                id,
+                nome,
+                telefone,
+                status,
+                observacao,
+                endereco,
+                modalidade,
+                horario_preferido,
+                publicacao_atual,
+                licao_atual,
+                data_inicio
+            FROM estudantes
+        """
+        if filtros:
+            sql += " WHERE " + " AND ".join(filtros)
+        sql += " ORDER BY nome COLLATE NOCASE"
+
+        with self.database.connect() as connection:
+            rows = connection.execute(sql, tuple(params)).fetchall()
+        return [dict(row) for row in rows]
+
     def quantidade_ativos(self) -> int:
         with self.database.connect() as connection:
             row = connection.execute(
