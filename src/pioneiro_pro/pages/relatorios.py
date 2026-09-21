@@ -274,6 +274,14 @@ def relatorios_view(
                     ft.Container(expand=True, content=edit_minutos),
                 ]
             ),
+            ft.Text("Publicações entregues", weight=ft.FontWeight.BOLD),
+            ft.Row(
+                controls=[
+                    ft.Container(expand=True, content=edit_brochuras),
+                    ft.Container(expand=True, content=edit_folhetos),
+                ]
+            ),
+            edit_outras,
             edit_obs,
             edit_msg,
             ft.FilledButton(
@@ -403,6 +411,11 @@ def relatorios_view(
             editor,
             confirmacao,
             ft.Text("Histórico de atividades", size=18, weight=ft.FontWeight.BOLD),
+            ft.Text(
+                "Use o ícone de lápis para corrigir o tempo ou as publicações de um registro já salvo.",
+                size=12,
+                color=ft.Colors.GREY_600,
+            ),
             ft.Row(
                 controls=[
                     ft.Container(expand=True, content=busca),
