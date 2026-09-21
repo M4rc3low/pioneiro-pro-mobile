@@ -252,26 +252,105 @@ def configuracoes_view(
         page.update()
         set_mensagem("Configurações salvas.")
 
-    async def exportar_backup(_):
+    async def exportar_backup_json(_):
         try:
             nome_arquivo = f"pioneiro-pro-backup-{date.today().isoformat()}.json"
             destino = await ft.FilePicker().save_file(
-                dialog_title="Salvar backup",
+                dialog_title="Salvar backup JSON sem senha",
                 file_name=nome_arquivo,
                 allowed_extensions=["json"],
                 src_bytes=backup.exportar_bytes(),
             )
             if destino is not None or page.web:
-                set_mensagem("Backup exportado com sucesso.")
+                set_mensagem(
+                    "Backup JSON exportado. Guarde-o em local seguro, pois não possui senha."
+                )
         except Exception as exc:
             set_mensagem(f"Não foi possível exportar o backup: {exc}", False)
+
+    def exportar_backup_protegido(_):
+        senha = ft.TextField(
+            label="Senha do backup",
+            password=True,
+            can_reveal_password=True,
+            autofocus=True,
+        )
+        confirmar = ft.TextField(
+            label="Confirmar senha",
+            password=True,
+            can_reveal_password=True,
+        )
+        erro = ft.Text(size=11, color=DANGER)
+
+        async def confirmar_exportacao(_event):
+            valor = senha.value or ""
+            if len(valor) < 8:
+                erro.value = "Use pelo menos 8 caracteres."
+                erro.update()
+                return
+            if valor != (confirmar.value or ""):
+                erro.value = "As senhas não coincidem."
+                erro.update()
+                return
+
+            try:
+                conteudo = backup.exportar_protegido_bytes(valor)
+                page.pop_dialog()
+                nome_arquivo = (
+                    f"pioneiro-pro-backup-{date.today().isoformat()}.ppbackup"
+                )
+                destino = await ft.FilePicker().save_file(
+                    dialog_title="Salvar backup protegido",
+                    file_name=nome_arquivo,
+                    allowed_extensions=["ppbackup"],
+                    src_bytes=conteudo,
+                )
+                if destino is not None or page.web:
+                    set_mensagem(
+                        "Backup protegido criado. Guarde a senha: ela não pode ser recuperada."
+                    )
+            except Exception as exc:
+                page.pop_dialog()
+                set_mensagem(
+                    f"Não foi possível criar o backup protegido: {exc}",
+                    False,
+                )
+
+        page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text("Criar backup protegido"),
+                content=ft.Column(
+                    tight=True,
+                    spacing=10,
+                    controls=[
+                        ft.Text(
+                            "O arquivo será criptografado. Use uma senha que você consiga "
+                            "lembrar; o Pioneiro Pro não armazena nem recupera essa senha.",
+                            size=12,
+                        ),
+                        senha,
+                        confirmar,
+                        erro,
+                    ],
+                ),
+                actions=[
+                    ft.TextButton("Cancelar", on_click=lambda _: page.pop_dialog()),
+                    ft.FilledButton(
+                        "Criar backup",
+                        icon=ft.Icons.LOCK_OUTLINE,
+                        on_click=confirmar_exportacao,
+                    ),
+                ],
+            )
+        )
 
     async def restaurar_backup(_):
         try:
             arquivos = await ft.FilePicker().pick_files(
                 dialog_title="Selecionar backup",
                 allow_multiple=False,
-                allowed_extensions=["json"],
+                allowed_extensions=["ppbackup", "json"],
                 with_data=True,
             )
             if not arquivos:
@@ -282,9 +361,68 @@ def configuracoes_view(
                 set_mensagem("Não foi possível ler o arquivo selecionado.", False)
                 return
 
-            backup.restaurar_bytes(conteudo)
-            set_mensagem("Backup restaurado. Os dados foram recarregados.")
-            on_restored()
+            if not backup.eh_backup_protegido(conteudo):
+                backup.restaurar_bytes(conteudo)
+                set_mensagem("Backup restaurado. Os dados foram recarregados.")
+                on_restored()
+                return
+
+            senha = ft.TextField(
+                label="Senha do backup",
+                password=True,
+                can_reveal_password=True,
+                autofocus=True,
+            )
+            erro = ft.Text(size=11, color=DANGER)
+
+            async def confirmar_restauracao(_event):
+                try:
+                    backup.restaurar_protegido_bytes(
+                        conteudo,
+                        senha.value or "",
+                    )
+                    page.pop_dialog()
+                    set_mensagem("Backup protegido restaurado com sucesso.")
+                    on_restored()
+                except ValueError as exc:
+                    erro.value = str(exc)
+                    erro.update()
+                except Exception as exc:
+                    page.pop_dialog()
+                    set_mensagem(
+                        f"Não foi possível restaurar o backup: {exc}",
+                        False,
+                    )
+
+            page.show_dialog(
+                ft.AlertDialog(
+                    modal=True,
+                    title=ft.Text("Backup protegido"),
+                    content=ft.Column(
+                        tight=True,
+                        spacing=10,
+                        controls=[
+                            ft.Text(
+                                "Informe a senha usada quando este backup foi criado.",
+                                size=12,
+                            ),
+                            senha,
+                            erro,
+                        ],
+                    ),
+                    actions=[
+                        ft.TextButton(
+                            "Cancelar",
+                            on_click=lambda _: page.pop_dialog(),
+                        ),
+                        ft.FilledButton(
+                            "Restaurar",
+                            icon=ft.Icons.RESTORE,
+                            on_click=confirmar_restauracao,
+                        ),
+                    ],
+                )
+            )
         except Exception as exc:
             set_mensagem(f"Backup inválido ou não pôde ser restaurado: {exc}", False)
 
@@ -457,18 +595,25 @@ def configuracoes_view(
                 )
             ),
             action_tile(
-                "Criar backup",
-                "Exporta estudantes, agenda, registros e configurações.",
-                ft.Icons.BACKUP_OUTLINED,
-                exportar_backup,
+                "Criar backup protegido",
+                "Criptografa estudantes, agenda e registros com uma senha escolhida por você.",
+                ft.Icons.LOCK_OUTLINE,
+                exportar_backup_protegido,
                 color=SUCCESS,
             ),
             action_tile(
                 "Restaurar backup",
-                "Substitui os dados atuais pelo conteúdo do arquivo.",
+                "Aceita backup protegido (.ppbackup) e o JSON antigo.",
                 ft.Icons.RESTORE,
                 restaurar_backup,
                 color=ft.Colors.PURPLE_500,
+            ),
+            action_tile(
+                "Exportar backup JSON sem senha",
+                "Compatibilidade com versões antigas. O conteúdo fica legível no arquivo.",
+                ft.Icons.WARNING_AMBER_OUTLINED,
+                exportar_backup_json,
+                color=ft.Colors.ORANGE_600,
             ),
             section_header(
                 "Exportação",
