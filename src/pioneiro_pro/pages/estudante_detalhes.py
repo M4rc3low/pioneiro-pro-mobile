@@ -1,6 +1,7 @@
 import flet as ft
 
 from pioneiro_pro.repositories import EstudanteRepository, VisitaRepository
+from pioneiro_pro.services import get_current_position_with_permission
 from pioneiro_pro.ui import (
     ACCENT,
     DANGER,
@@ -155,27 +156,46 @@ def estudante_detalhes_view(
         mensagem.update()
 
     async def salvar_localizacao(_):
-        try:
-            await geolocator.request_permission()
-            posicao = await geolocator.get_current_position()
-            estudantes.atualizar_localizacao(
-                estudante_id,
-                float(posicao.latitude),
-                float(posicao.longitude),
-                int(raio_alerta.value or 200),
-            )
-            alerta_proximidade.value = True
-            localizacao_status.value = "Localização cadastrada e pronta para avisos."
-            localizacao_status.color = SUCCESS
-            alerta_proximidade.update()
-            localizacao_status.update()
-            mensagem.value = "Localização salva com sucesso."
-            mensagem.color = SUCCESS
-            mensagem.update()
-        except Exception as exc:
-            mensagem.value = f"Não foi possível obter a localização: {exc}"
+        resultado = await get_current_position_with_permission(geolocator)
+
+        if not resultado.ok:
+            if resultado.code == "service_disabled":
+                mensagem.value = "Ative a localização do aparelho para salvar este ponto."
+                mensagem.color = WARNING
+                mensagem.update()
+                await geolocator.open_location_settings()
+                return
+
+            if resultado.code == "permission_permanently_denied":
+                mensagem.value = (
+                    "A permissão de localização está bloqueada. "
+                    "Abra as configurações do app e permita o acesso."
+                )
+                mensagem.color = WARNING
+                mensagem.update()
+                await geolocator.open_app_settings()
+                return
+
+            mensagem.value = "Permissão de localização não concedida."
             mensagem.color = DANGER
             mensagem.update()
+            return
+
+        posicao = resultado.position
+        estudantes.atualizar_localizacao(
+            estudante_id,
+            float(posicao.latitude),
+            float(posicao.longitude),
+            int(raio_alerta.value or 200),
+        )
+        alerta_proximidade.value = True
+        localizacao_status.value = "Localização cadastrada e pronta para avisos."
+        localizacao_status.color = SUCCESS
+        alerta_proximidade.update()
+        localizacao_status.update()
+        mensagem.value = "Localização salva com sucesso."
+        mensagem.color = SUCCESS
+        mensagem.update()
 
     def pedir_exclusao(_):
         confirmar_exclusao.visible = True
