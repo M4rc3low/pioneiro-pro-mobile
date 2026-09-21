@@ -49,6 +49,23 @@ def relatorios_view(
     editor = ft.Container(visible=False)
     confirmacao = ft.Container(visible=False)
     lista_atividades = ft.Column(spacing=8)
+    busca = ft.TextField(
+        label="Buscar no histórico",
+        hint_text="Data, observação ou tipo",
+        prefix_icon=ft.Icons.SEARCH,
+    )
+    filtro_tipo = ft.Dropdown(
+        label="Tipo",
+        value="todos",
+        width=150,
+        options=[
+            ft.DropdownOption(key="todos", text="Todos"),
+            ft.DropdownOption(key="ministerio", text="Ministério"),
+            ft.DropdownOption(key="estudo_biblico", text="Estudo bíblico"),
+            ft.DropdownOption(key="revisita", text="Revisita"),
+            ft.DropdownOption(key="outra", text="Outra"),
+        ],
+    )
 
     edit_data = ft.TextField(label="Data")
     edit_tipo = ft.Dropdown(
@@ -132,7 +149,8 @@ def relatorios_view(
         carregar_atividades()
 
     def carregar_atividades() -> None:
-        itens = atividades.listar(30)
+        tipo = None if filtro_tipo.value == "todos" else filtro_tipo.value
+        itens = atividades.buscar(busca.value or "", tipo, limite=100)
         controls: list[ft.Control] = []
 
         for item in itens:
@@ -254,6 +272,8 @@ def relatorios_view(
             )
         )
 
+    busca.on_change = lambda _: carregar_atividades()
+    filtro_tipo.on_change = lambda _: carregar_atividades()
     carregar_atividades()
 
     return ft.ListView(
@@ -313,6 +333,12 @@ def relatorios_view(
             editor,
             confirmacao,
             ft.Text("Histórico de atividades", size=18, weight=ft.FontWeight.BOLD),
+            ft.Row(
+                controls=[
+                    ft.Container(expand=True, content=busca),
+                    filtro_tipo,
+                ]
+            ),
             lista_atividades,
         ],
     )
