@@ -74,6 +74,39 @@ class AtividadeRepository:
     def listar_recentes(self, limite: int = 10) -> list[dict]:
         return self.listar(limite)
 
+    def buscar(
+        self,
+        texto: str = "",
+        tipo: str | None = None,
+        limite: int = 100,
+    ) -> list[dict]:
+        filtros = []
+        params: list[object] = []
+
+        if texto.strip():
+            termo = f"%{texto.strip()}%"
+            filtros.append(
+                "(data LIKE ? OR observacao LIKE ? OR tipo LIKE ?)"
+            )
+            params.extend([termo, termo, termo])
+
+        if tipo:
+            filtros.append("tipo = ?")
+            params.append(tipo)
+
+        sql = """
+            SELECT id, data, tipo, minutos, observacao
+            FROM atividades
+        """
+        if filtros:
+            sql += " WHERE " + " AND ".join(filtros)
+        sql += " ORDER BY data DESC, id DESC LIMIT ?"
+        params.append(limite)
+
+        with self.database.connect() as connection:
+            rows = connection.execute(sql, tuple(params)).fetchall()
+        return [dict(row) for row in rows]
+
     def total_minutos_mes(self, ano: int | None = None, mes: int | None = None) -> int:
         hoje = date.today()
         ano = ano or hoje.year
