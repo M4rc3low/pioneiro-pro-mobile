@@ -24,4 +24,7 @@ __all__ = [
     "get_current_position_with_permission",
     "normalize_permission_status",
     "ProximidadeService",
+    "LocalSecurityService",
 ]
+
+from .security_service import LocalSecurityService
