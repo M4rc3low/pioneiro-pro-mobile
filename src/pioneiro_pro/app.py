@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta
+
 import flet as ft
 import flet_geolocator as ftg
 
@@ -26,6 +28,7 @@ from pioneiro_pro.services import (
     CronometroService,
     ExportacaoService,
     LembreteService,
+    LocalSecurityService,
     ProximidadeService,
 )
 from pioneiro_pro.ui import app_logo
@@ -47,10 +50,13 @@ class PioneiroProApp:
         self.exportacao = ExportacaoService(self.atividades)
         self.lembretes = LembreteService(self.visitas)
         self.proximidade = ProximidadeService(self.estudantes, self.visitas)
+        self.seguranca_local = LocalSecurityService()
         self.url_launcher = ft.UrlLauncher()
         self.geolocator = None
         self.notifications = None
         self._app_em_primeiro_plano = True
+        self._background_since: datetime | None = None
+        self._bloqueado = False
 
         self.current_key = "dashboard"
         self.content = ft.Container(expand=True)
@@ -117,9 +123,14 @@ class PioneiroProApp:
         )
 
         if config.get("onboarding_concluido") == "1":
-            self._ativar_shell()
-            self.navigate("dashboard")
-            self._mostrar_lembrete_do_dia()
+            if config.get("bloqueio_local", "0") == "1":
+                self._bloqueado = True
+                self._mostrar_tela_bloqueio()
+                self.page.run_task(self._desbloquear_app)
+            else:
+                self._ativar_shell()
+                self.navigate("dashboard")
+                self._mostrar_lembrete_do_dia()
         else:
             self.page.appbar = None
             self.page.navigation_bar = None
@@ -208,6 +219,55 @@ class PioneiroProApp:
             )
         )
 
+    def _mostrar_tela_bloqueio(self) -> None:
+        self.page.appbar = None
+        self.page.navigation_bar = None
+        self.content.content = ft.Container(
+            expand=True,
+            alignment=ft.Alignment.CENTER,
+            padding=24,
+            content=ft.Column(
+                tight=True,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=16,
+                controls=[
+                    app_logo(84, 24),
+                    ft.Text(
+                        "Pioneiro Pro bloqueado",
+                        size=24,
+                        weight=ft.FontWeight.BOLD,
+                    ),
+                    ft.Text(
+                        "Use a biometria, PIN, senha ou padrão do aparelho para continuar.",
+                        text_align=ft.TextAlign.CENTER,
+                        color=ft.Colors.GREY_500,
+                    ),
+                    ft.FilledButton(
+                        "Desbloquear",
+                        icon=ft.Icons.LOCK_OPEN_OUTLINED,
+                        on_click=self._desbloquear_app,
+                    ),
+                ],
+            ),
+        )
+        self.page.update()
+
+    async def _desbloquear_app(self, _=None) -> None:
+        if not self._bloqueado:
+            return
+
+        autenticado = await self.seguranca_local.authenticate(
+            "Desbloqueie o Pioneiro Pro para acessar seus dados."
+        )
+        if not autenticado:
+            return
+
+        self._bloqueado = False
+        self._background_since = None
+        self._ativar_shell()
+        self.navigate("dashboard")
+        self._mostrar_lembrete_do_dia()
+
     def _ativar_shell(self) -> None:
         self.page.navigation_bar = self.nav
         self.page.appbar = ft.AppBar(
@@ -263,7 +323,27 @@ class PioneiroProApp:
         }
         self._app_em_primeiro_plano = event.state in foreground_states
 
-        if self._app_em_primeiro_plano:
+        if not self._app_em_primeiro_plano:
+            if (
+                not self._bloqueado
+                and self.configuracoes.obter("bloqueio_local", "0") == "1"
+            ):
+                self._background_since = datetime.now()
+            return
+
+        if (
+            not self._bloqueado
+            and self._background_since is not None
+            and self.configuracoes.obter("bloqueio_local", "0") == "1"
+            and datetime.now() - self._background_since >= timedelta(seconds=30)
+        ):
+            self._bloqueado = True
+            self._mostrar_tela_bloqueio()
+            self.page.run_task(self._desbloquear_app)
+            return
+
+        self._background_since = None
+        if not self._bloqueado:
             self._mostrar_lembrete_do_dia(force=True)
 
     def _mostrar_lembrete_do_dia(self, force: bool = False) -> None:
@@ -354,6 +434,7 @@ class PioneiroProApp:
                 self.backup,
                 self.exportacao,
                 self.geolocator,
+                self.seguranca_local,
                 self._dados_restaurados,
             )
         else:
