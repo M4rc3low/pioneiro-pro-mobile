@@ -114,14 +114,6 @@ def relatorios_view(
             edit_brochuras,
             edit_folhetos,
             edit_outras,
-            ft.Text("Publicações entregues", weight=ft.FontWeight.BOLD),
-            ft.Row(
-                controls=[
-                    ft.Container(expand=True, content=edit_brochuras),
-                    ft.Container(expand=True, content=edit_folhetos),
-                ]
-            ),
-            edit_outras,
             edit_obs,
             edit_msg,
             editor,
