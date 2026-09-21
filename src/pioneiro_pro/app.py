@@ -92,7 +92,7 @@ class PioneiroProApp:
         self.page.theme_mode = (
             ft.ThemeMode.DARK if config["tema"] == "escuro" else ft.ThemeMode.LIGHT
         )
-        self.page.theme = ft.Theme(color_scheme_seed=ft.Colors.BLUE)
+        self.page.theme = ft.Theme(color_scheme_seed=ft.Colors.BLUE_600)
         self.page.on_app_lifecycle_state_change = self._on_lifecycle
         self._configurar_geolocalizacao()
 
@@ -194,7 +194,38 @@ class PioneiroProApp:
     def _ativar_shell(self) -> None:
         self.page.navigation_bar = self.nav
         self.page.appbar = ft.AppBar(
-            title=ft.Text("Pioneiro Pro", weight=ft.FontWeight.BOLD),
+            title=ft.Row(
+                spacing=10,
+                controls=[
+                    ft.Container(
+                        width=38,
+                        height=38,
+                        border_radius=13,
+                        bgcolor=ft.Colors.BLUE_700,
+                        alignment=ft.Alignment.CENTER,
+                        content=ft.Icon(
+                            ft.Icons.EXPLORE_OUTLINED,
+                            color=ft.Colors.WHITE,
+                            size=21,
+                        ),
+                    ),
+                    ft.Column(
+                        spacing=0,
+                        controls=[
+                            ft.Text(
+                                "Pioneiro Pro",
+                                size=18,
+                                weight=ft.FontWeight.BOLD,
+                            ),
+                            ft.Text(
+                                "Organização pessoal",
+                                size=10,
+                                color=ft.Colors.GREY_500,
+                            ),
+                        ],
+                    ),
+                ],
+            ),
             center_title=False,
             actions=[
                 ft.IconButton(
