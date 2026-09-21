@@ -78,7 +78,9 @@ jobs:
 
       - name: Analisar extensão nativa
         working-directory: native/pioneiro_pro_geofencing
-        run: dart analyze
+        run: |
+          flutter pub get
+          flutter analyze
 
       - name: Recompilar Android com runtime Python
         shell: bash
