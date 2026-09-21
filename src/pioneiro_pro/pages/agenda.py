@@ -30,6 +30,7 @@ def agenda_view(
     visitas: VisitaRepository,
     estudantes: EstudanteRepository,
     geolocator,
+    on_geofence_changed=lambda: None,
 ) -> ft.Control:
     editing_id: dict[str, int | None] = {"value": None}
     localizacao: dict[str, float | None] = {"lat": None, "lon": None}
@@ -153,6 +154,7 @@ def agenda_view(
 
             def alternar(_, visita_id=item["id"], atual=concluida):
                 visitas.marcar_concluida(visita_id, not atual)
+                on_geofence_changed()
                 carregar()
                 lista.update()
 
@@ -196,6 +198,7 @@ def agenda_view(
 
             def excluir(_, visita_id=item["id"]):
                 visitas.excluir(visita_id)
+                on_geofence_changed()
                 carregar()
                 lista.update()
 
@@ -382,6 +385,7 @@ def agenda_view(
             )
             mensagem.value = "Compromisso atualizado."
 
+        on_geofence_changed()
         mensagem.color = SUCCESS
         mensagem.update()
         limpar_form()
