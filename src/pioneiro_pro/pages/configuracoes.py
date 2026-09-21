@@ -49,8 +49,6 @@ def configuracoes_view(
         label="Avisos por proximidade",
         value=config.get("proximidade_ativa", "0") == "1",
     )
-    proximidade_ativa.on_change = alterar_proximidade
-
     raio_padrao = ft.Dropdown(
         label="Raio padrão para novos locais",
         value=config.get("raio_proximidade_padrao", "200"),
@@ -180,6 +178,8 @@ def configuracoes_view(
                 ],
             )
         )
+
+    proximidade_ativa.on_change = alterar_proximidade
 
     def salvar(_):
         try:
