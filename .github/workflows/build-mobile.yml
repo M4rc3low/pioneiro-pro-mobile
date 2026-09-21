@@ -11,7 +11,7 @@ jobs:
   android:
     name: Android ${{ matrix.target }}
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -26,13 +26,31 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Configurar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.8"
+          channel: stable
+          cache: true
+
       - name: Instalar projeto
         run: |
           python -m pip install --upgrade pip
           pip install -e .
 
+      - name: Verificar ambiente
+        run: |
+          flutter --version
+          flet --version
+
       - name: Construir ${{ matrix.target }}
-        run: flet build ${{ matrix.target }} --no-rich-output
+        run: flet build ${{ matrix.target }} --no-rich-output --yes
 
       - name: Publicar artefato
         uses: actions/upload-artifact@v4
@@ -40,11 +58,12 @@ jobs:
           name: pioneiro-pro-${{ matrix.target }}
           path: build/${{ matrix.target }}
           if-no-files-found: error
+          retention-days: 14
 
   ios-simulator:
     name: iOS Simulator
     runs-on: macos-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
@@ -55,13 +74,25 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Configurar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.8"
+          channel: stable
+          cache: true
+
       - name: Instalar projeto
         run: |
           python -m pip install --upgrade pip
           pip install -e .
 
+      - name: Verificar ambiente
+        run: |
+          flutter --version
+          flet --version
+
       - name: Construir iOS Simulator
-        run: flet build ios-simulator --no-rich-output
+        run: flet build ios-simulator --no-rich-output --yes
 
       - name: Publicar artefato
         uses: actions/upload-artifact@v4
@@ -69,3 +100,4 @@ jobs:
           name: pioneiro-pro-ios-simulator
           path: build/ios-simulator
           if-no-files-found: error
+          retention-days: 14
