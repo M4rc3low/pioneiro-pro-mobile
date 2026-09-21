@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pioneiro_pro.database import Database
 from pioneiro_pro.repositories import AtividadeRepository, EstudanteRepository, VisitaRepository
-from pioneiro_pro.services import ExportacaoService, ProximidadeService
+from pioneiro_pro.services import AndroidNotificationService, ExportacaoService, ProximidadeService
 
 
 def criar_db(tmp_path):
@@ -161,3 +161,36 @@ def test_revisita_pode_ter_localizacao_propria(tmp_path):
     assert alertas[0]["tipo"] == "revisita"
     assert alertas[0]["latitude"] == -23.588
     assert alertas[0]["longitude"] == -46.681
+
+
+def test_alerta_pode_ser_liberado_para_nova_tentativa(tmp_path):
+    db = criar_db(tmp_path)
+    estudantes = EstudanteRepository(db)
+    visitas = VisitaRepository(db)
+
+    estudante_id = estudantes.criar("Paulo")
+    estudantes.atualizar_localizacao(estudante_id, -23.588, -46.681, 300)
+
+    service = ProximidadeService(estudantes, visitas)
+    agora = datetime(2026, 9, 21, 13, 0)
+
+    primeiro = service.verificar(-23.5881, -46.6811, agora)
+    assert len(primeiro) == 1
+
+    service.liberar_alerta(primeiro[0]["chave"])
+    segundo = service.verificar(-23.5881, -46.6811, agora)
+
+    assert len(segundo) == 1
+
+
+def test_ids_de_notificacao_sao_estaveis_por_tipo():
+    estudante = AndroidNotificationService.notification_id(
+        {"tipo": "estudante", "estudante_id": 42}
+    )
+    revisita = AndroidNotificationService.notification_id(
+        {"tipo": "revisita", "visita_id": 42}
+    )
+
+    assert estudante == 10042
+    assert revisita == 20042
+    assert estudante != revisita
