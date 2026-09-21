@@ -3,8 +3,7 @@ name: Mobile Build
 on:
   workflow_dispatch:
   push:
-    tags:
-      - "v*"
+    branches: ["main"]
 
 concurrency:
   group: mobile-build-${{ github.ref }}
