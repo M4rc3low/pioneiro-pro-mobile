@@ -53,6 +53,10 @@ class ProximidadeService:
         ultimo = self._ultimos_alertas.get(chave)
         return ultimo is None or agora - ultimo >= timedelta(hours=2)
 
+    def liberar_alerta(self, chave: str) -> None:
+        """Allow an alert to be retried when delivery failed."""
+        self._ultimos_alertas.pop(chave, None)
+
     def verificar(
         self,
         latitude: float,
