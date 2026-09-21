@@ -8,6 +8,13 @@
 - rota parte da localização atual do aparelho;
 - navegação de carro solicitada com modo guiado quando disponível.
 
+### Polimento visual
+- ícone oficial também aparece no topo do app e no onboarding;
+- cards com menos sombra e aparência mais atual;
+- cabeçalhos e métricas mais compactos;
+- navegação inferior com visual mais limpo;
+- versão exibida automaticamente nas configurações.
+
 
 ## 0.5.1 — 2026-09-21
 
