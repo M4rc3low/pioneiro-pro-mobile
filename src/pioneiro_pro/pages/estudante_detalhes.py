@@ -1,6 +1,24 @@
 import flet as ft
 
 from pioneiro_pro.repositories import EstudanteRepository, VisitaRepository
+from pioneiro_pro.ui import (
+    ACCENT,
+    DANGER,
+    SUCCESS,
+    WARNING,
+    empty_state,
+    icon_badge,
+    panel,
+    section_header,
+    status_pill,
+)
+
+
+STATUS = {
+    "ativo": ("Ativo", SUCCESS),
+    "pausado": ("Pausado", WARNING),
+    "encerrado": ("Encerrado", DANGER),
+}
 
 
 def estudante_detalhes_view(
@@ -13,11 +31,20 @@ def estudante_detalhes_view(
 ) -> ft.Control:
     estudante = estudantes.obter(estudante_id)
     if not estudante:
-        return ft.Column(
+        return ft.ListView(
             expand=True,
+            padding=18,
             controls=[
-                ft.Text("Estudante não encontrado.", size=20),
-                ft.TextButton("Voltar", on_click=lambda _: on_back()),
+                empty_state(
+                    ft.Icons.PERSON_OFF_OUTLINED,
+                    "Estudante não encontrado",
+                    "Esse perfil não está mais disponível.",
+                    action=ft.TextButton(
+                        "Voltar",
+                        icon=ft.Icons.ARROW_BACK,
+                        on_click=lambda _: on_back(),
+                    ),
+                )
             ],
         )
 
@@ -82,24 +109,27 @@ def estudante_detalhes_view(
         label="Avisar quando eu estiver por perto",
         value=bool(estudante.get("alerta_proximidade", 1)),
     )
+
+    localizacao_salva = (
+        estudante.get("latitude") is not None
+        and estudante.get("longitude") is not None
+    )
     localizacao_status = ft.Text(
         (
-            f'Localização salva: {float(estudante["latitude"]):.5f}, '
-            f'{float(estudante["longitude"]):.5f}'
-            if estudante.get("latitude") is not None
-            and estudante.get("longitude") is not None
-            else "Localização ainda não salva."
+            "Localização cadastrada e pronta para avisos."
+            if localizacao_salva
+            else "Nenhuma localização foi salva ainda."
         ),
-        size=12,
-        color=ft.Colors.GREY_600,
+        size=11,
+        color=SUCCESS if localizacao_salva else ft.Colors.GREY_500,
     )
-    mensagem = ft.Text(size=13)
+    mensagem = ft.Text(size=12)
     confirmar_exclusao = ft.Row(visible=False)
 
     def salvar(_):
         if not (nome.value or "").strip():
             mensagem.value = "O nome não pode ficar vazio."
-            mensagem.color = ft.Colors.RED
+            mensagem.color = DANGER
             mensagem.update()
             return
 
@@ -121,7 +151,7 @@ def estudante_detalhes_view(
             },
         )
         mensagem.value = "Perfil atualizado."
-        mensagem.color = ft.Colors.GREEN_700
+        mensagem.color = SUCCESS
         mensagem.update()
 
     async def salvar_localizacao(_):
@@ -135,19 +165,16 @@ def estudante_detalhes_view(
                 int(raio_alerta.value or 200),
             )
             alerta_proximidade.value = True
-            localizacao_status.value = (
-                f"Localização salva: {float(posicao.latitude):.5f}, "
-                f"{float(posicao.longitude):.5f}"
-            )
-            localizacao_status.color = ft.Colors.GREEN_700
+            localizacao_status.value = "Localização cadastrada e pronta para avisos."
+            localizacao_status.color = SUCCESS
             alerta_proximidade.update()
             localizacao_status.update()
-            mensagem.value = "Localização salva. O Pioneiro Pro poderá avisar quando você estiver por perto."
-            mensagem.color = ft.Colors.GREEN_700
+            mensagem.value = "Localização salva com sucesso."
+            mensagem.color = SUCCESS
             mensagem.update()
         except Exception as exc:
             mensagem.value = f"Não foi possível obter a localização: {exc}"
-            mensagem.color = ft.Colors.RED
+            mensagem.color = DANGER
             mensagem.update()
 
     def pedir_exclusao(_):
@@ -163,41 +190,131 @@ def estudante_detalhes_view(
         on_deleted()
 
     historico = visitas.listar_por_estudante(estudante_id)
-    historico_controls = []
+    historico_controls: list[ft.Control] = []
+
     for item in historico[:10]:
         concluida = bool(item["concluida"])
         historico_controls.append(
-            ft.ListTile(
-                leading=ft.Icon(
-                    ft.Icons.CHECK_CIRCLE if concluida else ft.Icons.EVENT_OUTLINED,
-                    color=ft.Colors.GREEN_700 if concluida else ft.Colors.BLUE_700,
+            panel(
+                ft.Row(
+                    controls=[
+                        icon_badge(
+                            (
+                                ft.Icons.CHECK_CIRCLE_OUTLINE
+                                if concluida
+                                else ft.Icons.EVENT_OUTLINED
+                            ),
+                            color=SUCCESS if concluida else ACCENT,
+                            box_size=38,
+                        ),
+                        ft.Container(
+                            expand=True,
+                            content=ft.Column(
+                                spacing=2,
+                                controls=[
+                                    ft.Text(
+                                        item["tipo"].replace("_", " ").title(),
+                                        weight=ft.FontWeight.BOLD,
+                                    ),
+                                    ft.Text(
+                                        (
+                                            f'{item["data"]} {item["horario"]}'.strip()
+                                            + (
+                                                f' • {item["observacao"]}'
+                                                if item["observacao"]
+                                                else ""
+                                            )
+                                        ),
+                                        size=11,
+                                        color=ft.Colors.GREY_500,
+                                    ),
+                                ],
+                            ),
+                        ),
+                        status_pill(
+                            "Concluído" if concluida else "Pendente",
+                            color=SUCCESS if concluida else WARNING,
+                        ),
+                    ],
                 ),
-                title=ft.Text(item["tipo"].replace("_", " ").title()),
-                subtitle=ft.Text(
-                    f'{item["data"]} {item["horario"]}'.strip()
-                    + (f' • {item["observacao"]}' if item["observacao"] else "")
-                ),
+                padding=12,
+                radius=18,
             )
         )
 
     if not historico_controls:
         historico_controls.append(
-            ft.Text(
-                "Ainda não há visitas ou revisitas registradas.",
-                color=ft.Colors.GREY_600,
+            empty_state(
+                ft.Icons.HISTORY_OUTLINED,
+                "Sem histórico ainda",
+                "Visitas e revisitas associadas aparecerão aqui.",
             )
         )
 
     confirmar_exclusao.controls = [
-        ft.Text("Excluir definitivamente?", color=ft.Colors.RED_700),
+        ft.Container(
+            expand=True,
+            content=ft.Text(
+                "Excluir este estudante definitivamente?",
+                color=DANGER,
+                weight=ft.FontWeight.BOLD,
+            ),
+        ),
         ft.TextButton("Cancelar", on_click=cancelar_exclusao),
         ft.FilledButton("Excluir", on_click=excluir),
     ]
 
+    status_text, status_color = STATUS.get(
+        estudante["status"] or "ativo",
+        ("Ativo", SUCCESS),
+    )
+    inicial = estudante["nome"][:1].upper() if estudante["nome"] else "?"
+
+    hero = panel(
+        ft.Row(
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                ft.Container(
+                    width=64,
+                    height=64,
+                    border_radius=22,
+                    bgcolor=ft.Colors.BLUE_700,
+                    alignment=ft.Alignment.CENTER,
+                    content=ft.Text(
+                        inicial,
+                        size=26,
+                        weight=ft.FontWeight.BOLD,
+                        color=ft.Colors.WHITE,
+                    ),
+                ),
+                ft.Container(
+                    expand=True,
+                    content=ft.Column(
+                        spacing=4,
+                        controls=[
+                            ft.Text(
+                                estudante["nome"],
+                                size=22,
+                                weight=ft.FontWeight.BOLD,
+                            ),
+                            ft.Text(
+                                estudante["telefone"] or "Sem telefone cadastrado",
+                                size=12,
+                                color=ft.Colors.GREY_500,
+                            ),
+                            status_pill(status_text, color=status_color),
+                        ],
+                    ),
+                ),
+            ],
+        ),
+        padding=18,
+    )
+
     return ft.ListView(
         expand=True,
-        padding=16,
-        spacing=14,
+        padding=18,
+        spacing=16,
         controls=[
             ft.Row(
                 controls=[
@@ -213,13 +330,16 @@ def estudante_detalhes_view(
                     ),
                 ]
             ),
-            ft.Container(
-                padding=16,
-                border_radius=18,
-                bgcolor=ft.Colors.WHITE,
-                content=ft.Column(
+            hero,
+            panel(
+                ft.Column(
                     spacing=12,
                     controls=[
+                        section_header(
+                            "Informações principais",
+                            subtitle="Contato, modalidade e andamento.",
+                            trailing=icon_badge(ft.Icons.BADGE_OUTLINED),
+                        ),
                         nome,
                         telefone,
                         endereco,
@@ -233,37 +353,75 @@ def estudante_detalhes_view(
                         publicacao,
                         licao,
                         data_inicio,
-                        ft.Divider(),
-                        ft.Text(
+                    ],
+                )
+            ),
+            panel(
+                ft.Column(
+                    spacing=12,
+                    controls=[
+                        section_header(
                             "Localização e proximidade",
-                            size=18,
-                            weight=ft.FontWeight.BOLD,
-                        ),
-                        ft.Text(
-                            "Salve a localização quando estiver no local da visita. "
-                            "Ela fica apenas no banco local do aplicativo.",
-                            size=12,
-                            color=ft.Colors.GREY_600,
+                            subtitle="Avisos quando você estiver por perto.",
+                            trailing=icon_badge(
+                                ft.Icons.LOCATION_ON_OUTLINED,
+                                color=ft.Colors.PURPLE_500,
+                            ),
                         ),
                         raio_alerta,
                         alerta_proximidade,
-                        localizacao_status,
+                        panel(
+                            ft.Row(
+                                controls=[
+                                    icon_badge(
+                                        (
+                                            ft.Icons.CHECK_CIRCLE_OUTLINE
+                                            if localizacao_salva
+                                            else ft.Icons.LOCATION_OFF_OUTLINED
+                                        ),
+                                        color=SUCCESS if localizacao_salva else WARNING,
+                                        box_size=38,
+                                    ),
+                                    ft.Container(
+                                        expand=True,
+                                        content=localizacao_status,
+                                    ),
+                                ],
+                            ),
+                            padding=10,
+                            radius=16,
+                            bgcolor=ft.Colors.SURFACE_CONTAINER_LOW,
+                        ),
                         ft.OutlinedButton(
-                            "Salvar minha localização atual",
+                            "Salvar localização atual",
                             icon=ft.Icons.MY_LOCATION,
                             on_click=salvar_localizacao,
                         ),
-                        observacao,
-                        mensagem,
-                        ft.FilledButton(
-                            "Salvar alterações",
-                            icon=ft.Icons.SAVE_OUTLINED,
-                            on_click=salvar,
-                        ),
                     ],
-                ),
+                )
             ),
-            ft.Text("Histórico de visitas", size=18, weight=ft.FontWeight.BOLD),
+            panel(
+                ft.Column(
+                    spacing=10,
+                    controls=[
+                        section_header(
+                            "Anotações",
+                            subtitle="Observações úteis sobre o acompanhamento.",
+                        ),
+                        observacao,
+                    ],
+                )
+            ),
+            mensagem,
+            ft.FilledButton(
+                "Salvar alterações",
+                icon=ft.Icons.SAVE_OUTLINED,
+                on_click=salvar,
+            ),
+            section_header(
+                "Histórico de visitas",
+                subtitle="Últimos compromissos associados.",
+            ),
             *historico_controls,
             ft.Divider(),
             ft.TextButton(
@@ -272,5 +430,6 @@ def estudante_detalhes_view(
                 on_click=pedir_exclusao,
             ),
             confirmar_exclusao,
+            ft.Container(height=6),
         ],
     )
