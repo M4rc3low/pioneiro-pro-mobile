@@ -3,6 +3,26 @@ from datetime import date
 import flet as ft
 
 from pioneiro_pro.repositories import EstudanteRepository, VisitaRepository
+from pioneiro_pro.ui import (
+    ACCENT,
+    DANGER,
+    SUCCESS,
+    WARNING,
+    empty_state,
+    icon_badge,
+    page_header,
+    panel,
+    section_header,
+    status_pill,
+)
+
+
+TIPO_LABELS = {
+    "estudo": ("Estudo bíblico", ft.Icons.MENU_BOOK_OUTLINED, ACCENT),
+    "revisita": ("Revisita", ft.Icons.REPLAY_OUTLINED, ft.Colors.PURPLE_500),
+    "ligacao": ("Ligação", ft.Icons.CALL_OUTLINED, SUCCESS),
+    "outro": ("Outro", ft.Icons.EVENT_NOTE_OUTLINED, WARNING),
+}
 
 
 def agenda_view(
@@ -32,12 +52,6 @@ def agenda_view(
             ft.DropdownOption(key="outro", text="Outro"),
         ],
     )
-    observacao = ft.TextField(
-        label="Observação",
-        multiline=True,
-        min_lines=2,
-        max_lines=4,
-    )
     lembrete = ft.Dropdown(
         label="Lembrar antes",
         value="30",
@@ -60,13 +74,20 @@ def agenda_view(
             ft.DropdownOption(key="1000", text="1 km"),
         ],
     )
-    localizacao_status = ft.Text(
-        "A revisita usará a localização do estudante, se houver.",
-        size=12,
-        color=ft.Colors.GREY_600,
+    observacao = ft.TextField(
+        label="Observação",
+        multiline=True,
+        min_lines=2,
+        max_lines=4,
     )
-    mensagem = ft.Text(size=13)
-    lista = ft.Column(spacing=8)
+    localizacao_status = ft.Text(
+        "Usará a localização do estudante, se houver.",
+        size=11,
+        color=ft.Colors.GREY_500,
+    )
+    mensagem = ft.Text(size=12)
+
+    lista = ft.Column(spacing=10)
     titulo_form = ft.Text("Novo compromisso", size=18, weight=ft.FontWeight.BOLD)
     botao_salvar = ft.FilledButton("Adicionar à agenda", icon=ft.Icons.ADD)
 
@@ -81,14 +102,33 @@ def agenda_view(
         raio_proximidade.value = "200"
         localizacao["lat"] = None
         localizacao["lon"] = None
-        localizacao_status.value = "A revisita usará a localização do estudante, se houver."
+        localizacao_status.value = "Usará a localização do estudante, se houver."
+        localizacao_status.color = ft.Colors.GREY_500
         titulo_form.value = "Novo compromisso"
         botao_salvar.text = "Adicionar à agenda"
+        mensagem.value = ""
+
         for control in [
-            estudante, data, horario, tipo, observacao, lembrete,
-            raio_proximidade, localizacao_status, titulo_form, botao_salvar
+            estudante,
+            data,
+            horario,
+            tipo,
+            observacao,
+            lembrete,
+            raio_proximidade,
+            localizacao_status,
+            titulo_form,
+            botao_salvar,
+            mensagem,
         ]:
             control.update()
+
+    def formatar_data(valor: str) -> tuple[str, str]:
+        try:
+            dt = date.fromisoformat(valor)
+            return f"{dt.day:02d}", f"{dt.month:02d}"
+        except ValueError:
+            return "--", "--"
 
     def carregar() -> None:
         itens = visitas.listar()
@@ -97,9 +137,18 @@ def agenda_view(
         for item in itens:
             concluida = bool(item["concluida"])
             nome = item["estudante_nome"] or "Sem estudante vinculado"
-            descricao = f'{item["data"]} {item["horario"]}'.strip()
+            tipo_label, tipo_icon, tipo_color = TIPO_LABELS.get(
+                item["tipo"],
+                (item["tipo"].title(), ft.Icons.EVENT_NOTE_OUTLINED, WARNING),
+            )
+            dia, mes = formatar_data(item["data"])
+
+            detalhes = [
+                item["horario"] or "Sem horário",
+                nome,
+            ]
             if item["observacao"]:
-                descricao += f' • {item["observacao"]}'
+                detalhes.append(item["observacao"])
 
             def alternar(_, visita_id=item["id"], atual=concluida):
                 visitas.marcar_concluida(visita_id, not atual)
@@ -122,12 +171,14 @@ def agenda_view(
                 localizacao["lat"] = visita.get("latitude")
                 localizacao["lon"] = visita.get("longitude")
                 localizacao_status.value = (
-                    "Localização específica salva para esta revisita."
-                    if visita.get("latitude") is not None and visita.get("longitude") is not None
-                    else "A revisita usará a localização do estudante, se houver."
+                    "Localização específica salva para este compromisso."
+                    if visita.get("latitude") is not None
+                    and visita.get("longitude") is not None
+                    else "Usará a localização do estudante, se houver."
                 )
                 titulo_form.value = "Editar compromisso"
                 botao_salvar.text = "Salvar alterações"
+
                 for control in [
                     estudante,
                     data,
@@ -147,64 +198,121 @@ def agenda_view(
                 carregar()
                 lista.update()
 
+            status = (
+                status_pill(
+                    "Concluído",
+                    color=SUCCESS,
+                    icon=ft.Icons.CHECK_CIRCLE_OUTLINE,
+                )
+                if concluida
+                else status_pill(
+                    "Pendente",
+                    color=WARNING,
+                    icon=ft.Icons.SCHEDULE_OUTLINED,
+                )
+            )
+
             controls.append(
-                ft.Container(
-                    padding=10,
-                    border_radius=14,
-                    bgcolor=ft.Colors.WHITE,
-                    content=ft.Row(
+                panel(
+                    ft.Row(
                         vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         controls=[
-                            ft.Checkbox(
-                                value=concluida,
-                                on_change=alternar,
-                            ),
                             ft.Container(
-                                expand=True,
+                                width=50,
+                                height=58,
+                                border_radius=16,
+                                bgcolor=ft.Colors.SURFACE_CONTAINER_LOW,
+                                alignment=ft.Alignment.CENTER,
                                 content=ft.Column(
-                                    spacing=2,
+                                    spacing=0,
+                                    tight=True,
+                                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                                     controls=[
                                         ft.Text(
-                                            f'{item["tipo"].replace("_", " ").title()} • {nome}',
+                                            dia,
+                                            size=19,
                                             weight=ft.FontWeight.BOLD,
-                                            color=(
-                                                ft.Colors.GREY_500
-                                                if concluida
-                                                else ft.Colors.BLACK
-                                            ),
+                                            color=tipo_color,
                                         ),
                                         ft.Text(
-                                            descricao,
-                                            size=12,
-                                            color=ft.Colors.GREY_600,
+                                            mes,
+                                            size=10,
+                                            color=ft.Colors.GREY_500,
                                         ),
                                     ],
                                 ),
                             ),
-                            ft.IconButton(
-                                icon=ft.Icons.EDIT_OUTLINED,
-                                tooltip="Editar",
-                                on_click=editar,
+                            ft.Container(
+                                expand=True,
+                                content=ft.Column(
+                                    spacing=4,
+                                    controls=[
+                                        ft.Row(
+                                            controls=[
+                                                ft.Icon(
+                                                    tipo_icon,
+                                                    size=17,
+                                                    color=tipo_color,
+                                                ),
+                                                ft.Container(
+                                                    expand=True,
+                                                    content=ft.Text(
+                                                        tipo_label,
+                                                        weight=ft.FontWeight.BOLD,
+                                                    ),
+                                                ),
+                                                status,
+                                            ]
+                                        ),
+                                        ft.Text(
+                                            " • ".join(detalhes),
+                                            size=11,
+                                            color=ft.Colors.GREY_500,
+                                            max_lines=2,
+                                            overflow=ft.TextOverflow.ELLIPSIS,
+                                        ),
+                                    ],
+                                ),
                             ),
-                            ft.IconButton(
-                                icon=ft.Icons.DELETE_OUTLINE,
-                                tooltip="Excluir",
-                                on_click=excluir,
+                            ft.PopupMenuButton(
+                                icon=ft.Icons.MORE_VERT,
+                                items=[
+                                    ft.PopupMenuItem(
+                                        content=ft.Text(
+                                            "Marcar como pendente"
+                                            if concluida
+                                            else "Marcar como concluído"
+                                        ),
+                                        on_click=alternar,
+                                    ),
+                                    ft.PopupMenuItem(
+                                        content=ft.Text("Editar"),
+                                        on_click=editar,
+                                    ),
+                                    ft.PopupMenuItem(
+                                        content=ft.Text("Excluir"),
+                                        on_click=excluir,
+                                    ),
+                                ],
                             ),
                         ],
                     ),
+                    padding=14,
+                    radius=20,
                 )
             )
 
-        lista.controls = controls or [
-            ft.Container(
-                padding=16,
-                content=ft.Text(
-                    "Nenhum compromisso na agenda.",
-                    color=ft.Colors.GREY_600,
-                ),
-            )
-        ]
+        lista.controls = (
+            controls
+            if controls
+            else [
+                empty_state(
+                    ft.Icons.EVENT_AVAILABLE_OUTLINED,
+                    "Agenda livre",
+                    "Adicione um estudo, revisita, ligação ou outro compromisso.",
+                )
+            ]
+        )
 
     async def salvar_localizacao(_):
         try:
@@ -212,55 +320,46 @@ def agenda_view(
             posicao = await geolocator.get_current_position()
             localizacao["lat"] = float(posicao.latitude)
             localizacao["lon"] = float(posicao.longitude)
-            localizacao_status.value = (
-                f"Localização da revisita salva: {float(posicao.latitude):.5f}, "
-                f"{float(posicao.longitude):.5f}"
-            )
-            localizacao_status.color = ft.Colors.GREEN_700
+            localizacao_status.value = "Localização específica salva neste compromisso."
+            localizacao_status.color = SUCCESS
             localizacao_status.update()
         except Exception as exc:
             mensagem.value = f"Não foi possível obter a localização: {exc}"
-            mensagem.color = ft.Colors.RED
+            mensagem.color = DANGER
             mensagem.update()
 
     def salvar(_):
         if not (data.value or "").strip():
             mensagem.value = "Informe a data."
-            mensagem.color = ft.Colors.RED
+            mensagem.color = DANGER
             mensagem.update()
             return
 
         estudante_id = int(estudante.value) if estudante.value else None
 
+        params = dict(
+            estudante_id=estudante_id,
+            data=(data.value or "").strip(),
+            horario=(horario.value or "").strip(),
+            tipo=tipo.value or "estudo",
+            observacao=observacao.value or "",
+            lembrar_minutos_antes=int(lembrete.value or 30),
+            latitude=localizacao["lat"],
+            longitude=localizacao["lon"],
+            raio_alerta_m=int(raio_proximidade.value or 200),
+        )
+
         if editing_id["value"] is None:
-            visitas.criar(
-                estudante_id=estudante_id,
-                data=(data.value or "").strip(),
-                horario=(horario.value or "").strip(),
-                tipo=tipo.value or "estudo",
-                observacao=observacao.value or "",
-                lembrar_minutos_antes=int(lembrete.value or 30),
-                latitude=localizacao["lat"],
-                longitude=localizacao["lon"],
-                raio_alerta_m=int(raio_proximidade.value or 200),
-            )
+            visitas.criar(**params)
             mensagem.value = "Compromisso adicionado."
         else:
             visitas.atualizar(
                 visita_id=int(editing_id["value"]),
-                estudante_id=estudante_id,
-                data=(data.value or "").strip(),
-                horario=(horario.value or "").strip(),
-                tipo=tipo.value or "estudo",
-                observacao=observacao.value or "",
-                lembrar_minutos_antes=int(lembrete.value or 30),
-                latitude=localizacao["lat"],
-                longitude=localizacao["lon"],
-                raio_alerta_m=int(raio_proximidade.value or 200),
+                **params,
             )
             mensagem.value = "Compromisso atualizado."
 
-        mensagem.color = ft.Colors.GREEN_700
+        mensagem.color = SUCCESS
         mensagem.update()
         limpar_form()
         carregar()
@@ -271,21 +370,23 @@ def agenda_view(
 
     return ft.ListView(
         expand=True,
-        padding=16,
+        padding=18,
         spacing=16,
         controls=[
-            ft.Text("Agenda", size=26, weight=ft.FontWeight.BOLD),
-            ft.Text(
-                "Organize estudos, revisitas, ligações e outros compromissos.",
-                color=ft.Colors.GREY_600,
+            page_header(
+                "Agenda",
+                "Estudos, revisitas e compromissos em um só lugar.",
+                ft.Icons.CALENDAR_MONTH_OUTLINED,
             ),
-            ft.Container(
-                padding=16,
-                border_radius=18,
-                bgcolor=ft.Colors.WHITE,
-                content=ft.Column(
+            panel(
+                ft.Column(
                     spacing=12,
                     controls=[
+                        section_header(
+                            "Novo compromisso",
+                            subtitle="Defina horário, lembrete e proximidade.",
+                            trailing=icon_badge(ft.Icons.ADD_TASK_OUTLINED),
+                        ),
                         titulo_form,
                         estudante,
                         ft.Row(
@@ -294,14 +395,35 @@ def agenda_view(
                                 ft.Container(expand=True, content=horario),
                             ]
                         ),
-                        tipo,
-                        lembrete,
+                        ft.Row(
+                            controls=[
+                                ft.Container(expand=True, content=tipo),
+                                ft.Container(expand=True, content=lembrete),
+                            ]
+                        ),
                         raio_proximidade,
-                        localizacao_status,
-                        ft.OutlinedButton(
-                            "Salvar localização desta revisita",
-                            icon=ft.Icons.MY_LOCATION,
-                            on_click=salvar_localizacao,
+                        panel(
+                            ft.Row(
+                                controls=[
+                                    icon_badge(
+                                        ft.Icons.LOCATION_ON_OUTLINED,
+                                        color=ft.Colors.PURPLE_500,
+                                        box_size=38,
+                                    ),
+                                    ft.Container(
+                                        expand=True,
+                                        content=localizacao_status,
+                                    ),
+                                    ft.IconButton(
+                                        icon=ft.Icons.MY_LOCATION,
+                                        tooltip="Salvar localização atual",
+                                        on_click=salvar_localizacao,
+                                    ),
+                                ],
+                            ),
+                            padding=10,
+                            radius=16,
+                            bgcolor=ft.Colors.SURFACE_CONTAINER_LOW,
                         ),
                         observacao,
                         mensagem,
@@ -310,6 +432,7 @@ def agenda_view(
                                 ft.Container(expand=True, content=botao_salvar),
                                 ft.TextButton(
                                     "Limpar",
+                                    icon=ft.Icons.REFRESH,
                                     on_click=lambda _: limpar_form(),
                                 ),
                             ]
@@ -317,7 +440,11 @@ def agenda_view(
                     ],
                 ),
             ),
-            ft.Text("Compromissos", size=18, weight=ft.FontWeight.BOLD),
+            section_header(
+                "Compromissos",
+                subtitle="Toque no menu para editar ou concluir.",
+            ),
             lista,
+            ft.Container(height=6),
         ],
     )
