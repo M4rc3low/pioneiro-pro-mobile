@@ -54,6 +54,10 @@ class PioneiroProApp:
         self.nav = ft.NavigationBar(
             selected_index=0,
             on_change=self._on_nav_change,
+            bgcolor=ft.Colors.SURFACE,
+            indicator_color=ft.Colors.with_opacity(0.16, ft.Colors.BLUE_600),
+            elevation=4,
+            label_behavior=ft.NavigationBarLabelBehavior.ALWAYS_SHOW,
             destinations=[
                 ft.NavigationBarDestination(
                     icon=ft.Icons.HOME_OUTLINED,
@@ -92,7 +96,10 @@ class PioneiroProApp:
         self.page.theme_mode = (
             ft.ThemeMode.DARK if config["tema"] == "escuro" else ft.ThemeMode.LIGHT
         )
-        self.page.theme = ft.Theme(color_scheme_seed=ft.Colors.BLUE_600)
+        self.page.theme = ft.Theme(
+            color_scheme_seed=ft.Colors.BLUE_600,
+            scaffold_bgcolor=ft.Colors.SURFACE_CONTAINER_LOW,
+        )
         self.page.on_app_lifecycle_state_change = self._on_lifecycle
         self._configurar_geolocalizacao()
 
@@ -194,6 +201,9 @@ class PioneiroProApp:
     def _ativar_shell(self) -> None:
         self.page.navigation_bar = self.nav
         self.page.appbar = ft.AppBar(
+            bgcolor=ft.Colors.SURFACE,
+            elevation=0,
+            shadow_color=ft.Colors.with_opacity(0.08, ft.Colors.BLACK),
             title=ft.Row(
                 spacing=10,
                 controls=[
