@@ -142,7 +142,7 @@ A geração e assinatura final de um IPA distribuível exigem ambiente Apple e c
 - Produto: **Pioneiro Pro**
 - Pacote Python: `pioneiro_pro_mobile`
 - Bundle/Application ID: `br.com.pioneiropro.app`
-- Versão atual: **0.5.1**
+- Versão atual: **0.5.2**
 - Android mínimo: **API 24**
 
 ## Privacidade
