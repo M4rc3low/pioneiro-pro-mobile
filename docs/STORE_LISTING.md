@@ -24,8 +24,11 @@ Com ele você pode:
 - cadastrar estudantes e manter informações importantes organizadas;
 - acompanhar estudos e revisitas;
 - criar compromissos na agenda;
+- receber alertas quando estiver próximo de estudantes ou revisitas cadastradas;
 - definir lembretes com antecedência;
 - pesquisar e filtrar registros;
+- registrar brochuras, folhetos e outras publicações;
+- compartilhar o relatório mensal pelo aplicativo de sua escolha;
 - criar backups dos seus dados;
 - restaurar um backup quando necessário;
 - exportar relatórios em CSV e resumos em TXT;
@@ -50,6 +53,7 @@ organização,agenda,horas,metas,estudos,revisitas,produtividade,registros
 - não há compras dentro do aplicativo nesta versão;
 - não há publicidade nesta versão;
 - não há rastreamento de terceiros nesta versão;
+- o uso de localização é opcional e os locais salvos permanecem no aparelho;
 - backup e exportação são iniciados manualmente pelo usuário.
 
 Estas informações devem ser revisadas novamente caso recursos de nuvem, login, publicidade, analytics ou compras sejam adicionados no futuro.
