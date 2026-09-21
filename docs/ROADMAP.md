@@ -28,12 +28,21 @@
 - [x] Exportação de resumo TXT
 - [x] Política de privacidade inicial
 
+## Proximidade
+- [x] GPS Android/iOS
+- [x] localização por estudante
+- [x] localização por revisita
+- [x] raio configurável
+- [x] monitoramento de proximidade
+- [x] permissões de localização em segundo plano
+- [ ] notificação nativa específica com app totalmente encerrado
+
 ## Experiência mobile
 - [x] Onboarding
 - [x] Ícone
 - [x] Splash
 - [x] Lembretes dentro do aplicativo com antecedência configurável
-- [ ] Notificações locais agendadas pelo sistema operacional em segundo plano
+- [ ] Notificação nativa específica de proximidade com o app totalmente encerrado
 
 ## Distribuição
 - [x] Pipeline de CI
