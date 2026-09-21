@@ -10,6 +10,7 @@ class ConfiguracaoRepository:
         "meta_horas_mes": "50",
         "meta_horas_ano": "600",
         "tema": "claro",
+        "onboarding_concluido": "0",
     }
 
     def __init__(self, database: Database) -> None:
