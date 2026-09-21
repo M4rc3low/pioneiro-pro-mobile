@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.4.0 — 2026-09-21
+
+### Proximidade
+- localização opcional salva por estudante;
+- localização específica opcional por revisita;
+- raio de proximidade configurável;
+- monitoramento via GPS;
+- suporte às permissões de localização do Android e iOS;
+- controle global de avisos por proximidade;
+- limite de repetição de alertas para evitar notificações excessivas.
+
+### Registros
+- quantidade de brochuras;
+- quantidade de folhetos;
+- outras publicações;
+- edição posterior do tempo e das quantidades no histórico;
+- totais mensais de publicações.
+
+### Relatório mensal
+- resumo mensal com tempo, registros e publicações;
+- botão de compartilhamento usando a folha nativa do sistema;
+- compatível com WhatsApp, e-mail, Mensagens e demais destinos oferecidos pelo aparelho.
+
+### Privacidade
+- localização permanece armazenada localmente;
+- política de privacidade atualizada com o uso opcional de GPS.
+
+
 ## 0.3.0 — 2026-09-21
 
 ### Aplicativo
