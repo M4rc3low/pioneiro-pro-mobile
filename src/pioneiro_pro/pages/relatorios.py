@@ -8,6 +8,7 @@ from pioneiro_pro.repositories import AtividadeRepository, ConfiguracaoRepositor
 from pioneiro_pro.services import ExportacaoService
 from pioneiro_pro.ui import (
     ACCENT,
+    brand_gradient,
     DANGER,
     SUCCESS,
     WARNING,
@@ -352,7 +353,7 @@ def relatorios_view(
     hero = ft.Container(
         padding=22,
         border_radius=26,
-        bgcolor=ft.Colors.BLUE_700,
+        gradient=brand_gradient(),
         content=ft.Column(
             spacing=10,
             controls=[
