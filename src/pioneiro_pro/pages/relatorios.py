@@ -5,6 +5,7 @@ from datetime import date
 import flet as ft
 
 from pioneiro_pro.repositories import AtividadeRepository, ConfiguracaoRepository
+from pioneiro_pro.services import ExportacaoService
 from pioneiro_pro.utils import formatar_minutos
 
 
@@ -33,6 +34,7 @@ def _progresso(atual: int, meta: int) -> float:
 def relatorios_view(
     atividades: AtividadeRepository,
     configuracoes: ConfiguracaoRepository,
+    exportacao: ExportacaoService,
 ) -> ft.Control:
     hoje = date.today()
     config = configuracoes.todas()
@@ -42,6 +44,8 @@ def relatorios_view(
     total_mes = atividades.total_minutos_mes()
     total_ano = atividades.total_minutos_ano()
     quantidade = atividades.quantidade_mes()
+    publicacoes_mes = atividades.publicacoes_mes()
+    relatorio_mensal = exportacao.relatorio_mensal_texto()
 
     editor_id: dict[str, int | None] = {"value": None}
     excluir_id: dict[str, int | None] = {"value": None}
@@ -79,6 +83,9 @@ def relatorios_view(
     )
     edit_horas = ft.TextField(label="Horas", keyboard_type=ft.KeyboardType.NUMBER)
     edit_minutos = ft.TextField(label="Minutos", keyboard_type=ft.KeyboardType.NUMBER)
+    edit_brochuras = ft.TextField(label="Brochuras", keyboard_type=ft.KeyboardType.NUMBER)
+    edit_folhetos = ft.TextField(label="Folhetos", keyboard_type=ft.KeyboardType.NUMBER)
+    edit_outras = ft.TextField(label="Outras publicações", keyboard_type=ft.KeyboardType.NUMBER)
     edit_obs = ft.TextField(label="Observação", multiline=True, min_lines=2, max_lines=4)
     edit_msg = ft.Text(size=13)
 
@@ -93,6 +100,9 @@ def relatorios_view(
         edit_tipo.value = item["tipo"]
         edit_horas.value = str(item["minutos"] // 60)
         edit_minutos.value = str(item["minutos"] % 60)
+        edit_brochuras.value = str(item.get("brochuras", 0))
+        edit_folhetos.value = str(item.get("folhetos", 0))
+        edit_outras.value = str(item.get("outras_publicacoes", 0))
         edit_obs.value = item["observacao"]
         edit_msg.value = ""
         editor.visible = True
@@ -101,6 +111,17 @@ def relatorios_view(
             edit_tipo,
             edit_horas,
             edit_minutos,
+            edit_brochuras,
+            edit_folhetos,
+            edit_outras,
+            ft.Text("Publicações entregues", weight=ft.FontWeight.BOLD),
+            ft.Row(
+                controls=[
+                    ft.Container(expand=True, content=edit_brochuras),
+                    ft.Container(expand=True, content=edit_folhetos),
+                ]
+            ),
+            edit_outras,
             edit_obs,
             edit_msg,
             editor,
@@ -110,6 +131,9 @@ def relatorios_view(
     def salvar_edicao(_):
         try:
             total = int(edit_horas.value or 0) * 60 + int(edit_minutos.value or 0)
+            qtd_brochuras = max(0, int(edit_brochuras.value or 0))
+            qtd_folhetos = max(0, int(edit_folhetos.value or 0))
+            qtd_outras = max(0, int(edit_outras.value or 0))
         except ValueError:
             edit_msg.value = "Horas e minutos precisam ser números."
             edit_msg.color = ft.Colors.RED
@@ -128,6 +152,9 @@ def relatorios_view(
             edit_tipo.value or "ministerio",
             total,
             edit_obs.value or "",
+            qtd_brochuras,
+            qtd_folhetos,
+            qtd_outras,
         )
         fechar_editor()
         carregar_atividades()
@@ -175,6 +202,22 @@ def relatorios_view(
                                             f'{item["data"]} • {formatar_minutos(item["minutos"])}',
                                             size=12,
                                             color=ft.Colors.GREY_600,
+                                        ),
+                                        ft.Text(
+                                            " • ".join(
+                                                parte for parte in [
+                                                    f'Brochuras: {item.get("brochuras", 0)}' if item.get("brochuras", 0) else "",
+                                                    f'Folhetos: {item.get("folhetos", 0)}' if item.get("folhetos", 0) else "",
+                                                    f'Outras: {item.get("outras_publicacoes", 0)}' if item.get("outras_publicacoes", 0) else "",
+                                                ] if parte
+                                            ),
+                                            size=12,
+                                            color=ft.Colors.BLUE_700,
+                                            visible=bool(
+                                                item.get("brochuras", 0)
+                                                or item.get("folhetos", 0)
+                                                or item.get("outras_publicacoes", 0)
+                                            ),
                                         ),
                                         (
                                             ft.Text(
@@ -287,6 +330,27 @@ def relatorios_view(
                 color=ft.Colors.GREY_600,
             ),
             ft.Container(
+                padding=16,
+                border_radius=18,
+                bgcolor=ft.Colors.SURFACE,
+                content=ft.Column(
+                    spacing=8,
+                    controls=[
+                        ft.Text("Relatório mensal", size=18, weight=ft.FontWeight.BOLD),
+                        ft.Text(relatorio_mensal, size=13),
+                        ft.Button(
+                            "Compartilhar",
+                            icon=ft.Icons.SHARE,
+                            action=ft.ShareText(
+                                relatorio_mensal,
+                                subject="Relatório mensal - Pioneiro Pro",
+                                title="Compartilhar relatório mensal",
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+            ft.Container(
                 padding=18,
                 border_radius=18,
                 bgcolor=ft.Colors.WHITE,
@@ -302,6 +366,12 @@ def relatorios_view(
                         ),
                         ft.ProgressBar(value=_progresso(total_mes, meta_mes_min)),
                         ft.Text(f"{quantidade} atividade(s) neste mês", size=12),
+                        ft.Text(
+                            f"Brochuras: {publicacoes_mes['brochuras']} • "
+                            f"Folhetos: {publicacoes_mes['folhetos']} • "
+                            f"Outras: {publicacoes_mes['outras_publicacoes']}",
+                            size=12,
+                        ),
                     ],
                 ),
             ),
