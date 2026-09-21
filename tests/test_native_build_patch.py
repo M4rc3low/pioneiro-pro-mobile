@@ -4,7 +4,7 @@ from scripts.patch_native_geofencing import (
     EXTENSION_LINE,
     IMPORT_LINE,
     PACKAGE_NAME,
-    patch_main,
+    patch_generated,
     patch_pubspec,
 )
 
@@ -24,22 +24,21 @@ def test_patch_pubspec_adiciona_dependencia_local_uma_vez(tmp_path):
     assert f"path: ../../native/{PACKAGE_NAME}" in texto
 
 
-def test_patch_main_registra_extensao_uma_vez(tmp_path):
-    main = tmp_path / "main.dart"
-    main.write_text(
+def test_patch_generated_registra_extensao_uma_vez(tmp_path):
+    generated = tmp_path / "flet_generated.dart"
+    generated.write_text(
+        "// GENERATED FILE — do not edit.\n"
+        "import 'dart:convert';\n\n"
         "import 'package:flet/flet.dart';\n\n"
-        "const bool isProduction = false;\n"
-        "void main() {\n"
-        "  List<FletExtension> extensions = [\n"
-        "    FletCoreExtension(),\n"
-        "  ];\n"
-        "}\n",
+        "List<FletExtension> extensions = [\n"
+        "  flet_geolocator.Extension(),\n"
+        "];\n",
         encoding="utf-8",
     )
 
-    patch_main(main)
-    patch_main(main)
+    patch_generated(generated)
+    patch_generated(generated)
 
-    texto = main.read_text(encoding="utf-8")
+    texto = generated.read_text(encoding="utf-8")
     assert texto.count(IMPORT_LINE) == 1
     assert texto.count(EXTENSION_LINE.strip()) == 1
