@@ -17,15 +17,19 @@ class VisitaRepository:
         estudante_id: int | None = None,
         observacao: str = "",
         lembrar_minutos_antes: int = 30,
+        latitude: float | None = None,
+        longitude: float | None = None,
+        raio_alerta_m: int = 200,
     ) -> int:
         with self.database.connect() as connection:
             cursor = connection.execute(
                 """
                 INSERT INTO visitas (
                     estudante_id, data, horario, tipo, observacao,
-                    lembrar_minutos_antes, notificado
+                    lembrar_minutos_antes, notificado,
+                    latitude, longitude, raio_alerta_m, alerta_proximidade
                 )
-                VALUES (?, ?, ?, ?, ?, ?, 0)
+                VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, 1)
                 """,
                 (
                     estudante_id,
@@ -34,6 +38,9 @@ class VisitaRepository:
                     tipo,
                     observacao.strip(),
                     max(0, lembrar_minutos_antes),
+                    latitude,
+                    longitude,
+                    max(50, raio_alerta_m),
                 ),
             )
             return int(cursor.lastrowid)
@@ -50,6 +57,10 @@ class VisitaRepository:
                 v.concluida,
                 v.lembrar_minutos_antes,
                 v.notificado,
+                COALESCE(v.latitude, e.latitude) AS latitude,
+                COALESCE(v.longitude, e.longitude) AS longitude,
+                COALESCE(v.raio_alerta_m, e.raio_alerta_m, 200) AS raio_alerta_m,
+                v.alerta_proximidade,
                 e.nome AS estudante_nome
             FROM visitas v
             LEFT JOIN estudantes e ON e.id = v.estudante_id
@@ -70,7 +81,8 @@ class VisitaRepository:
                 """
                 SELECT
                     id, data, horario, tipo, observacao, concluida,
-                    lembrar_minutos_antes, notificado
+                    lembrar_minutos_antes, notificado,
+                    latitude, longitude, raio_alerta_m, alerta_proximidade
                 FROM visitas
                 WHERE estudante_id = ?
                 ORDER BY data DESC, horario DESC, id DESC
@@ -88,6 +100,9 @@ class VisitaRepository:
         estudante_id: int | None,
         observacao: str,
         lembrar_minutos_antes: int = 30,
+        latitude: float | None = None,
+        longitude: float | None = None,
+        raio_alerta_m: int = 200,
     ) -> None:
         with self.database.connect() as connection:
             connection.execute(
@@ -99,7 +114,10 @@ class VisitaRepository:
                     tipo = ?,
                     observacao = ?,
                     lembrar_minutos_antes = ?,
-                    notificado = 0
+                    notificado = 0,
+                    latitude = ?,
+                    longitude = ?,
+                    raio_alerta_m = ?
                 WHERE id = ?
                 """,
                 (
@@ -109,6 +127,9 @@ class VisitaRepository:
                     tipo,
                     observacao.strip(),
                     max(0, lembrar_minutos_antes),
+                    latitude,
+                    longitude,
+                    max(50, raio_alerta_m),
                     visita_id,
                 ),
             )
@@ -130,6 +151,32 @@ class VisitaRepository:
     def excluir(self, visita_id: int) -> None:
         with self.database.connect() as connection:
             connection.execute("DELETE FROM visitas WHERE id = ?", (visita_id,))
+
+    def listar_para_proximidade(self) -> list[dict]:
+        with self.database.connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT
+                    v.id,
+                    v.tipo,
+                    v.data,
+                    v.horario,
+                    v.observacao,
+                    v.estudante_id,
+                    e.nome AS estudante_nome,
+                    COALESCE(v.latitude, e.latitude) AS latitude,
+                    COALESCE(v.longitude, e.longitude) AS longitude,
+                    COALESCE(v.raio_alerta_m, e.raio_alerta_m, 200) AS raio_alerta_m
+                FROM visitas v
+                LEFT JOIN estudantes e ON e.id = v.estudante_id
+                WHERE v.concluida = 0
+                  AND v.alerta_proximidade = 1
+                  AND COALESCE(v.latitude, e.latitude) IS NOT NULL
+                  AND COALESCE(v.longitude, e.longitude) IS NOT NULL
+                ORDER BY v.data ASC, v.horario ASC
+                """
+            ).fetchall()
+        return [dict(row) for row in rows]
 
     def quantidade_pendentes(self) -> int:
         with self.database.connect() as connection:
