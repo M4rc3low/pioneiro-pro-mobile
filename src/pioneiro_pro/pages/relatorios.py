@@ -401,6 +401,13 @@ def relatorios_view(
         ),
     )
 
+    async def compartilhar_relatorio(_):
+        await ft.Share().share_text(
+            relatorio_mensal,
+            subject="Relatório mensal - Pioneiro Pro",
+            title="Compartilhar relatório mensal",
+        )
+
     share_card = panel(
         ft.Column(
             spacing=10,
@@ -417,11 +424,7 @@ def relatorios_view(
                 ft.Button(
                     "Compartilhar relatório",
                     icon=ft.Icons.SHARE,
-                    action=ft.ShareText(
-                        relatorio_mensal,
-                        subject="Relatório mensal - Pioneiro Pro",
-                        title="Compartilhar relatório mensal",
-                    ),
+                    on_click=compartilhar_relatorio,
                 ),
             ],
         )
