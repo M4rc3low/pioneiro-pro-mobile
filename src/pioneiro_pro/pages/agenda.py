@@ -8,8 +8,10 @@ from pioneiro_pro.repositories import EstudanteRepository, VisitaRepository
 def agenda_view(
     visitas: VisitaRepository,
     estudantes: EstudanteRepository,
+    geolocator,
 ) -> ft.Control:
     editing_id: dict[str, int | None] = {"value": None}
+    localizacao: dict[str, float | None] = {"lat": None, "lon": None}
 
     estudante = ft.Dropdown(
         label="Estudante",
@@ -47,6 +49,22 @@ def agenda_view(
             ft.DropdownOption(key="1440", text="1 dia antes"),
         ],
     )
+    raio_proximidade = ft.Dropdown(
+        label="Raio do aviso por proximidade",
+        value="200",
+        options=[
+            ft.DropdownOption(key="100", text="100 m"),
+            ft.DropdownOption(key="200", text="200 m"),
+            ft.DropdownOption(key="300", text="300 m"),
+            ft.DropdownOption(key="500", text="500 m"),
+            ft.DropdownOption(key="1000", text="1 km"),
+        ],
+    )
+    localizacao_status = ft.Text(
+        "A revisita usará a localização do estudante, se houver.",
+        size=12,
+        color=ft.Colors.GREY_600,
+    )
     mensagem = ft.Text(size=13)
     lista = ft.Column(spacing=8)
     titulo_form = ft.Text("Novo compromisso", size=18, weight=ft.FontWeight.BOLD)
@@ -60,9 +78,16 @@ def agenda_view(
         tipo.value = "estudo"
         observacao.value = ""
         lembrete.value = "30"
+        raio_proximidade.value = "200"
+        localizacao["lat"] = None
+        localizacao["lon"] = None
+        localizacao_status.value = "A revisita usará a localização do estudante, se houver."
         titulo_form.value = "Novo compromisso"
         botao_salvar.text = "Adicionar à agenda"
-        for control in [estudante, data, horario, tipo, observacao, lembrete, titulo_form, botao_salvar]:
+        for control in [
+            estudante, data, horario, tipo, observacao, lembrete,
+            raio_proximidade, localizacao_status, titulo_form, botao_salvar
+        ]:
             control.update()
 
     def carregar() -> None:
@@ -93,6 +118,14 @@ def agenda_view(
                 tipo.value = visita["tipo"]
                 observacao.value = visita["observacao"]
                 lembrete.value = str(visita.get("lembrar_minutos_antes") or 30)
+                raio_proximidade.value = str(visita.get("raio_alerta_m") or 200)
+                localizacao["lat"] = visita.get("latitude")
+                localizacao["lon"] = visita.get("longitude")
+                localizacao_status.value = (
+                    "Localização específica salva para esta revisita."
+                    if visita.get("latitude") is not None and visita.get("longitude") is not None
+                    else "A revisita usará a localização do estudante, se houver."
+                )
                 titulo_form.value = "Editar compromisso"
                 botao_salvar.text = "Salvar alterações"
                 for control in [
@@ -102,6 +135,8 @@ def agenda_view(
                     tipo,
                     observacao,
                     lembrete,
+                    raio_proximidade,
+                    localizacao_status,
                     titulo_form,
                     botao_salvar,
                 ]:
@@ -171,6 +206,23 @@ def agenda_view(
             )
         ]
 
+    async def salvar_localizacao(_):
+        try:
+            await geolocator.request_permission()
+            posicao = await geolocator.get_current_position()
+            localizacao["lat"] = float(posicao.latitude)
+            localizacao["lon"] = float(posicao.longitude)
+            localizacao_status.value = (
+                f"Localização da revisita salva: {float(posicao.latitude):.5f}, "
+                f"{float(posicao.longitude):.5f}"
+            )
+            localizacao_status.color = ft.Colors.GREEN_700
+            localizacao_status.update()
+        except Exception as exc:
+            mensagem.value = f"Não foi possível obter a localização: {exc}"
+            mensagem.color = ft.Colors.RED
+            mensagem.update()
+
     def salvar(_):
         if not (data.value or "").strip():
             mensagem.value = "Informe a data."
@@ -188,6 +240,9 @@ def agenda_view(
                 tipo=tipo.value or "estudo",
                 observacao=observacao.value or "",
                 lembrar_minutos_antes=int(lembrete.value or 30),
+                latitude=localizacao["lat"],
+                longitude=localizacao["lon"],
+                raio_alerta_m=int(raio_proximidade.value or 200),
             )
             mensagem.value = "Compromisso adicionado."
         else:
@@ -199,6 +254,9 @@ def agenda_view(
                 tipo=tipo.value or "estudo",
                 observacao=observacao.value or "",
                 lembrar_minutos_antes=int(lembrete.value or 30),
+                latitude=localizacao["lat"],
+                longitude=localizacao["lon"],
+                raio_alerta_m=int(raio_proximidade.value or 200),
             )
             mensagem.value = "Compromisso atualizado."
 
@@ -238,6 +296,13 @@ def agenda_view(
                         ),
                         tipo,
                         lembrete,
+                        raio_proximidade,
+                        localizacao_status,
+                        ft.OutlinedButton(
+                            "Salvar localização desta revisita",
+                            icon=ft.Icons.MY_LOCATION,
+                            on_click=salvar_localizacao,
+                        ),
                         observacao,
                         mensagem,
                         ft.Row(
