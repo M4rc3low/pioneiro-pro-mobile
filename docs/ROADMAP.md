@@ -5,42 +5,51 @@
 - [x] Estrutura para Android e iOS
 - [x] Banco SQLite local
 - [x] Navegação mobile
-- [x] Dashboard inicial
+- [x] Dashboard
 - [x] Registro de atividades
-- [x] Cadastro básico de estudantes
-- [x] Relatório mensal básico
-- [x] Testes iniciais
+- [x] Testes automatizados
 
-## Segunda etapa
+## Gestão pessoal
 - [x] Cronômetro em tempo real
 - [x] Edição e exclusão de atividades
 - [x] Perfil completo de estudantes
 - [x] Histórico de estudos e revisitas
-- [x] Agenda com criação de compromissos
+- [x] Agenda funcional
 - [x] Marcar compromissos como concluídos
 - [x] Metas mensais e anuais
-- [x] Progresso visual mensal
+- [x] Progresso mensal
 - [x] Tema claro e escuro
-- [x] Configurações persistentes
+- [x] Busca e filtros
 
-## Próxima etapa
-- [ ] Lembretes e notificações locais
-- [ ] Backup e restauração
-- [ ] Exportação de relatório
-- [ ] Sincronização em nuvem
-- [ ] Autenticação
-- [ ] Proteção opcional por PIN/biometria
-- [ ] Busca e filtros
-- [ ] Testes de integração de interface
-- [ ] Ícone e splash screen definitivos
-- [ ] Experiência de onboarding
+## Dados
+- [x] Backup em JSON
+- [x] Restauração de backup
+- [x] Exportação CSV
+- [x] Exportação de resumo TXT
+- [x] Política de privacidade inicial
 
-## Publicação
-- [ ] Confirmar bundle ID definitivo
-- [ ] Assinatura Android
+## Experiência mobile
+- [x] Onboarding
+- [x] Ícone
+- [x] Splash
+- [x] Lembretes dentro do aplicativo
+- [ ] Notificações locais agendadas pelo sistema operacional em segundo plano
+
+## Distribuição
+- [x] Pipeline de CI
+- [x] Pipeline de build mobile
+- [ ] APK validado
+- [ ] AAB validado
+- [ ] Build de simulador iOS validado
+- [ ] Assinatura Android de produção
 - [ ] Google Play Console
 - [ ] Apple Developer
+- [ ] IPA assinado
 - [ ] App Store Connect
-- [ ] Política de privacidade
-- [ ] Testes internos Android
-- [ ] TestFlight iOS
+- [ ] TestFlight
+- [ ] Publicação nas lojas
+
+## Futuro opcional
+- [ ] Sincronização em nuvem
+- [ ] Autenticação de conta
+- [ ] Proteção por biometria/PIN
