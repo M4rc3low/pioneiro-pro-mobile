@@ -32,15 +32,15 @@
 - [x] Onboarding
 - [x] Ícone
 - [x] Splash
-- [x] Lembretes dentro do aplicativo
+- [x] Lembretes dentro do aplicativo com antecedência configurável
 - [ ] Notificações locais agendadas pelo sistema operacional em segundo plano
 
 ## Distribuição
 - [x] Pipeline de CI
 - [x] Pipeline de build mobile
-- [ ] APK validado
-- [ ] AAB validado
-- [ ] Build de simulador iOS validado
+- [x] APK validado
+- [x] AAB validado
+- [x] Build de simulador iOS validado
 - [ ] Assinatura Android de produção
 - [ ] Google Play Console
 - [ ] Apple Developer
