@@ -288,7 +288,11 @@ class PioneiroProApp:
                 on_deleted=lambda: self.navigate("estudantes"),
             )
         elif key == "agenda":
-            control = agenda_view(self.visitas, self.estudantes)
+            control = agenda_view(
+                self.visitas,
+                self.estudantes,
+                self.geolocator,
+            )
         elif key == "relatorios":
             control = relatorios_view(
                 self.atividades,
