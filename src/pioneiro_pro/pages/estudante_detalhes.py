@@ -7,6 +7,7 @@ def estudante_detalhes_view(
     estudante_id: int,
     estudantes: EstudanteRepository,
     visitas: VisitaRepository,
+    geolocator,
     on_back,
     on_deleted,
 ) -> ft.Control:
@@ -66,6 +67,32 @@ def estudante_detalhes_view(
         min_lines=3,
         max_lines=6,
     )
+    raio_alerta = ft.Dropdown(
+        label="Avisar quando eu estiver a",
+        value=str(estudante.get("raio_alerta_m") or 200),
+        options=[
+            ft.DropdownOption(key="100", text="100 m"),
+            ft.DropdownOption(key="200", text="200 m"),
+            ft.DropdownOption(key="300", text="300 m"),
+            ft.DropdownOption(key="500", text="500 m"),
+            ft.DropdownOption(key="1000", text="1 km"),
+        ],
+    )
+    alerta_proximidade = ft.Switch(
+        label="Avisar quando eu estiver por perto",
+        value=bool(estudante.get("alerta_proximidade", 1)),
+    )
+    localizacao_status = ft.Text(
+        (
+            f'Localização salva: {float(estudante["latitude"]):.5f}, '
+            f'{float(estudante["longitude"]):.5f}'
+            if estudante.get("latitude") is not None
+            and estudante.get("longitude") is not None
+            else "Localização ainda não salva."
+        ),
+        size=12,
+        color=ft.Colors.GREY_600,
+    )
     mensagem = ft.Text(size=13)
     confirmar_exclusao = ft.Row(visible=False)
 
@@ -89,11 +116,39 @@ def estudante_detalhes_view(
                 "licao_atual": (licao.value or "").strip(),
                 "data_inicio": (data_inicio.value or "").strip(),
                 "observacao": (observacao.value or "").strip(),
+                "raio_alerta_m": int(raio_alerta.value or 200),
+                "alerta_proximidade": 1 if alerta_proximidade.value else 0,
             },
         )
         mensagem.value = "Perfil atualizado."
         mensagem.color = ft.Colors.GREEN_700
         mensagem.update()
+
+    async def salvar_localizacao(_):
+        try:
+            await geolocator.request_permission()
+            posicao = await geolocator.get_current_position()
+            estudantes.atualizar_localizacao(
+                estudante_id,
+                float(posicao.latitude),
+                float(posicao.longitude),
+                int(raio_alerta.value or 200),
+            )
+            alerta_proximidade.value = True
+            localizacao_status.value = (
+                f"Localização salva: {float(posicao.latitude):.5f}, "
+                f"{float(posicao.longitude):.5f}"
+            )
+            localizacao_status.color = ft.Colors.GREEN_700
+            alerta_proximidade.update()
+            localizacao_status.update()
+            mensagem.value = "Localização salva. O Pioneiro Pro poderá avisar quando você estiver por perto."
+            mensagem.color = ft.Colors.GREEN_700
+            mensagem.update()
+        except Exception as exc:
+            mensagem.value = f"Não foi possível obter a localização: {exc}"
+            mensagem.color = ft.Colors.RED
+            mensagem.update()
 
     def pedir_exclusao(_):
         confirmar_exclusao.visible = True
@@ -178,6 +233,26 @@ def estudante_detalhes_view(
                         publicacao,
                         licao,
                         data_inicio,
+                        ft.Divider(),
+                        ft.Text(
+                            "Localização e proximidade",
+                            size=18,
+                            weight=ft.FontWeight.BOLD,
+                        ),
+                        ft.Text(
+                            "Salve a localização quando estiver no local da visita. "
+                            "Ela fica apenas no banco local do aplicativo.",
+                            size=12,
+                            color=ft.Colors.GREY_600,
+                        ),
+                        raio_alerta,
+                        alerta_proximidade,
+                        localizacao_status,
+                        ft.OutlinedButton(
+                            "Salvar minha localização atual",
+                            icon=ft.Icons.MY_LOCATION,
+                            on_click=salvar_localizacao,
+                        ),
                         observacao,
                         mensagem,
                         ft.FilledButton(
