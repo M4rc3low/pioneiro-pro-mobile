@@ -31,6 +31,9 @@ class Database:
                     tipo TEXT NOT NULL,
                     minutos INTEGER NOT NULL DEFAULT 0,
                     observacao TEXT NOT NULL DEFAULT '',
+                    brochuras INTEGER NOT NULL DEFAULT 0,
+                    folhetos INTEGER NOT NULL DEFAULT 0,
+                    outras_publicacoes INTEGER NOT NULL DEFAULT 0,
                     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
                 );
 
@@ -46,6 +49,10 @@ class Database:
                     publicacao_atual TEXT NOT NULL DEFAULT '',
                     licao_atual TEXT NOT NULL DEFAULT '',
                     data_inicio TEXT NOT NULL DEFAULT '',
+                    latitude REAL,
+                    longitude REAL,
+                    raio_alerta_m INTEGER NOT NULL DEFAULT 200,
+                    alerta_proximidade INTEGER NOT NULL DEFAULT 1,
                     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
                 );
 
@@ -59,6 +66,10 @@ class Database:
                     concluida INTEGER NOT NULL DEFAULT 0,
                     lembrar_minutos_antes INTEGER NOT NULL DEFAULT 30,
                     notificado INTEGER NOT NULL DEFAULT 0,
+                    latitude REAL,
+                    longitude REAL,
+                    raio_alerta_m INTEGER NOT NULL DEFAULT 200,
+                    alerta_proximidade INTEGER NOT NULL DEFAULT 1,
                     FOREIGN KEY (estudante_id) REFERENCES estudantes(id) ON DELETE SET NULL
                 );
 
@@ -106,6 +117,52 @@ class Database:
                 "visitas",
                 "notificado",
                 "INTEGER NOT NULL DEFAULT 0",
+            )
+            self._ensure_column(
+                connection,
+                "atividades",
+                "brochuras",
+                "INTEGER NOT NULL DEFAULT 0",
+            )
+            self._ensure_column(
+                connection,
+                "atividades",
+                "folhetos",
+                "INTEGER NOT NULL DEFAULT 0",
+            )
+            self._ensure_column(
+                connection,
+                "atividades",
+                "outras_publicacoes",
+                "INTEGER NOT NULL DEFAULT 0",
+            )
+            self._ensure_column(connection, "estudantes", "latitude", "REAL")
+            self._ensure_column(connection, "estudantes", "longitude", "REAL")
+            self._ensure_column(
+                connection,
+                "estudantes",
+                "raio_alerta_m",
+                "INTEGER NOT NULL DEFAULT 200",
+            )
+            self._ensure_column(
+                connection,
+                "estudantes",
+                "alerta_proximidade",
+                "INTEGER NOT NULL DEFAULT 1",
+            )
+            self._ensure_column(connection, "visitas", "latitude", "REAL")
+            self._ensure_column(connection, "visitas", "longitude", "REAL")
+            self._ensure_column(
+                connection,
+                "visitas",
+                "raio_alerta_m",
+                "INTEGER NOT NULL DEFAULT 200",
+            )
+            self._ensure_column(
+                connection,
+                "visitas",
+                "alerta_proximidade",
+                "INTEGER NOT NULL DEFAULT 1",
             )
 
     @staticmethod
