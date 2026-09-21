@@ -1,0 +1,32 @@
+[project]
+name = "pioneiro_pro_mobile"
+version = "0.1.0"
+description = "Aplicativo mobile Pioneiro Pro para Android e iOS"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "flet>=0.28.0"
+]
+
+[tool.flet]
+product = "Pioneiro Pro"
+org = "br.com.pioneiropro"
+bundle_id = "br.com.pioneiropro.app"
+
+[tool.flet.app]
+path = "src"
+module = "main"
+
+[dependency-groups]
+dev = [
+    "flet[test]",
+    "ruff>=0.11"
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
