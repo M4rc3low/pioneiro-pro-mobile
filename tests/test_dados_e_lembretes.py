@@ -75,3 +75,68 @@ def test_lembrete_respeita_antecedencia(tmp_path):
 
     service.marcar_exibidos(dentro)
     assert service.compromissos_para_lembrar(datetime(2026, 9, 21, 14, 45)) == []
+
+
+def test_backup_protegido_oculta_dados_e_restaura(tmp_path):
+    origem = criar_db(tmp_path, "protegido-origem.db")
+    estudantes = EstudanteRepository(origem)
+    estudantes.criar("Pessoa Teste", "11987654321")
+
+    service = BackupService(origem)
+    conteudo = service.exportar_protegido_bytes("senha-forte-123")
+
+    assert service.eh_backup_protegido(conteudo)
+    assert b"Pessoa Teste" not in conteudo
+    assert b"11987654321" not in conteudo
+
+    destino = criar_db(tmp_path, "protegido-destino.db")
+    BackupService(destino).restaurar_protegido_bytes(
+        conteudo,
+        "senha-forte-123",
+    )
+
+    restaurados = EstudanteRepository(destino).listar()
+    assert len(restaurados) == 1
+    assert restaurados[0]["nome"] == "Pessoa Teste"
+
+
+def test_backup_protegido_rejeita_senha_incorreta(tmp_path):
+    db = criar_db(tmp_path, "senha.db")
+    service = BackupService(db)
+    conteudo = service.exportar_protegido_bytes("senha-correta-123")
+
+    try:
+        service.restaurar_protegido_bytes(conteudo, "senha-errada-123")
+    except ValueError as exc:
+        assert "Senha incorreta" in str(exc)
+    else:
+        raise AssertionError("Backup protegido aceitou senha incorreta.")
+
+
+def test_restauracao_rejeita_coluna_desconhecida(tmp_path):
+    db = criar_db(tmp_path, "schema.db")
+    service = BackupService(db)
+
+    import json
+
+    payload = json.loads(service.exportar_bytes().decode("utf-8"))
+    payload["dados"]["estudantes"] = [
+        {
+            "id": 1,
+            "nome": "Teste",
+            "telefone": "",
+            "status": "ativo",
+            "observacao": "",
+            "created_at": "2026-09-21 00:00:00",
+            "campo_injetado": "não permitido",
+        }
+    ]
+
+    conteudo = json.dumps(payload).encode("utf-8")
+
+    try:
+        service.restaurar_bytes(conteudo)
+    except ValueError as exc:
+        assert "campos desconhecidos" in str(exc)
+    else:
+        raise AssertionError("Backup com coluna desconhecida foi aceito.")
