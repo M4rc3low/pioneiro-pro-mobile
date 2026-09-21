@@ -3,10 +3,8 @@ name: Mobile Build
 on:
   workflow_dispatch:
   push:
-    branches: ["main"]
-    paths:
-      - "src/**"
-      - "pyproject.toml"
+    tags:
+      - "v*"
 
 concurrency:
   group: mobile-build-${{ github.ref }}
