@@ -8,6 +8,14 @@ from pioneiro_pro.repositories import AtividadeRepository
 from pioneiro_pro.utils import formatar_minutos
 
 
+TIPOS = {
+    "ministerio": "Ministério",
+    "estudo_biblico": "Estudo bíblico",
+    "revisita": "Revisita",
+    "outra": "Outra",
+}
+
+
 class ExportacaoService:
     def __init__(self, atividades: AtividadeRepository) -> None:
         self.atividades = atividades
@@ -21,7 +29,7 @@ class ExportacaoService:
             writer.writerow(
                 [
                     item["data"],
-                    item["tipo"].replace("_", " ").title(),
+                    TIPOS.get(item["tipo"], item["tipo"].replace("_", " ").title()),
                     item["minutos"],
                     formatar_minutos(item["minutos"]),
                     item["observacao"],
@@ -48,7 +56,7 @@ class ExportacaoService:
         for item in self.atividades.listar_recentes(20):
             linhas.append(
                 f'- {item["data"]} | '
-                f'{item["tipo"].replace("_", " ").title()} | '
+                f'{TIPOS.get(item["tipo"], item["tipo"].replace("_", " ").title())} | '
                 f'{formatar_minutos(item["minutos"])}'
             )
 
