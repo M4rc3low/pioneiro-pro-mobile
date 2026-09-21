@@ -21,44 +21,56 @@
 - [x] Tema claro e escuro
 - [x] Busca e filtros
 
-## Dados
-- [x] Backup em JSON
-- [x] Restauração de backup
+## Dados e segurança
+- [x] Backup JSON compatível com versões anteriores
+- [x] Backup protegido por senha
+- [x] Restauração de backup protegido
+- [x] Validação de esquema durante restauração
 - [x] Exportação CSV
 - [x] Exportação de resumo TXT
-- [x] Política de privacidade inicial
+- [x] Política de privacidade
+- [x] Bloqueio opcional por biometria/PIN/credencial do aparelho
+- [ ] Migrações numeradas com `schema_version`
+- [ ] Criptografia do banco SQLite em repouso
 
 ## Proximidade
 - [x] GPS Android/iOS
 - [x] localização por estudante
 - [x] localização por revisita
 - [x] raio configurável
-- [x] monitoramento de proximidade
-- [x] permissões de localização em segundo plano
-- [ ] notificação nativa específica com app totalmente encerrado
+- [x] controle de repetição
+- [x] proximidade opt-in em novas instalações
+- [x] tratamento de localização desligada/permissão negada
+- [x] orientação para permissão de localização em segundo plano
+- [x] notificação nativa Android quando o processo continua ativo em segundo plano
+- [ ] geofencing/notificação confiável com o processo totalmente encerrado
+- [ ] equivalente de notificação nativa de proximidade no iOS
 
 ## Experiência mobile
 - [x] Onboarding
 - [x] Ícone
 - [x] Splash
 - [x] Lembretes dentro do aplicativo com antecedência configurável
-- [ ] Notificação nativa específica de proximidade com o app totalmente encerrado
+- [x] Ação **Como chegar** via Google Maps
+- [x] Bloqueio automático após retorno do segundo plano
+- [ ] testes de consumo de bateria em uso prolongado de localização
 
 ## Distribuição
 - [x] Pipeline de CI
 - [x] Pipeline de build mobile
-- [x] APK validado
-- [x] AAB validado
-- [x] Build de simulador iOS validado
-- [ ] Assinatura Android de produção
+- [x] APK validado em pipeline anterior
+- [x] AAB validado em pipeline anterior
+- [x] Build de simulador iOS validado em pipeline anterior
+- [ ] validar build mobile com a nova camada de notificação/criptografia
+- [ ] assinatura Android de produção
 - [ ] Google Play Console
 - [ ] Apple Developer
 - [ ] IPA assinado
 - [ ] App Store Connect
 - [ ] TestFlight
-- [ ] Publicação nas lojas
+- [ ] publicação nas lojas
 
 ## Futuro opcional
 - [ ] Sincronização em nuvem
 - [ ] Autenticação de conta
-- [ ] Proteção por biometria/PIN
+- [ ] Exportação/importação seletiva
