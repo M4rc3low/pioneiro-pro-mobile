@@ -45,6 +45,7 @@ class PioneiroProApp:
         self.exportacao = ExportacaoService(self.atividades)
         self.lembretes = LembreteService(self.visitas)
         self.proximidade = ProximidadeService(self.estudantes, self.visitas)
+        self.url_launcher = ft.UrlLauncher()
         self.geolocator = None
 
         self.current_key = "dashboard"
@@ -179,21 +180,21 @@ class PioneiroProApp:
         distancia = item["distancia_m"]
         texto = f'{item["nome"]} está a aproximadamente {distancia} m.'
 
-        if item.get("estudante_id"):
-            acao = "Abrir"
-            on_action = lambda _: self.navigate(
-                "estudante_detalhes",
-                estudante_id=item["estudante_id"],
+        latitude = float(item["latitude"])
+        longitude = float(item["longitude"])
+        rota_url = self.proximidade.url_google_maps(latitude, longitude)
+
+        async def abrir_rota(_):
+            await self.url_launcher.launch_url(
+                rota_url,
+                mode=ft.LaunchMode.EXTERNAL_APPLICATION,
             )
-        else:
-            acao = "Agenda"
-            on_action = lambda _: self.navigate("agenda")
 
         self.page.show_dialog(
             ft.SnackBar(
                 content=ft.Text(texto),
-                action=acao,
-                on_action=on_action,
+                action="Como chegar",
+                on_action=abrir_rota,
                 show_close_icon=True,
             )
         )
