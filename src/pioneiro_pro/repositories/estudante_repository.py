@@ -31,9 +31,13 @@ class EstudanteRepository:
                     horario_preferido,
                     publicacao_atual,
                     licao_atual,
-                    data_inicio
+                    data_inicio,
+                    latitude,
+                    longitude,
+                    raio_alerta_m,
+                    alerta_proximidade
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, 200, 1)
                 """,
                 (
                     nome.strip(),
@@ -64,7 +68,11 @@ class EstudanteRepository:
                     horario_preferido,
                     publicacao_atual,
                     licao_atual,
-                    data_inicio
+                    data_inicio,
+                    latitude,
+                    longitude,
+                    raio_alerta_m,
+                    alerta_proximidade
                 FROM estudantes
                 WHERE id = ?
                 """,
@@ -87,7 +95,11 @@ class EstudanteRepository:
                     horario_preferido,
                     publicacao_atual,
                     licao_atual,
-                    data_inicio
+                    data_inicio,
+                    latitude,
+                    longitude,
+                    raio_alerta_m,
+                    alerta_proximidade
                 FROM estudantes
                 ORDER BY nome COLLATE NOCASE
                 """
@@ -106,6 +118,10 @@ class EstudanteRepository:
             "publicacao_atual",
             "licao_atual",
             "data_inicio",
+            "latitude",
+            "longitude",
+            "raio_alerta_m",
+            "alerta_proximidade",
         }
         atualizacoes = {chave: dados[chave] for chave in campos if chave in dados}
         if not atualizacoes:
@@ -163,6 +179,39 @@ class EstudanteRepository:
 
         with self.database.connect() as connection:
             rows = connection.execute(sql, tuple(params)).fetchall()
+        return [dict(row) for row in rows]
+
+    def atualizar_localizacao(
+        self,
+        estudante_id: int,
+        latitude: float,
+        longitude: float,
+        raio_alerta_m: int = 200,
+    ) -> None:
+        self.atualizar(
+            estudante_id,
+            {
+                "latitude": float(latitude),
+                "longitude": float(longitude),
+                "raio_alerta_m": max(50, int(raio_alerta_m)),
+                "alerta_proximidade": 1,
+            },
+        )
+
+    def listar_com_localizacao(self) -> list[dict]:
+        with self.database.connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT id, nome, endereco, latitude, longitude,
+                       raio_alerta_m, alerta_proximidade, status
+                FROM estudantes
+                WHERE latitude IS NOT NULL
+                  AND longitude IS NOT NULL
+                  AND alerta_proximidade = 1
+                  AND status = 'ativo'
+                ORDER BY nome COLLATE NOCASE
+                """
+            ).fetchall()
         return [dict(row) for row in rows]
 
     def quantidade_ativos(self) -> int:
