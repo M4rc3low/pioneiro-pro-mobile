@@ -2,9 +2,57 @@
 
 Aplicativo mobile do Pioneiro Pro desenvolvido em Python com Flet, com arquitetura preparada para Android e iOS.
 
-## Objetivo
+## Versão atual
 
-Centralizar o acompanhamento pessoal de atividades, horas, estudantes, visitas, agenda, metas e relatórios em um aplicativo simples, rápido e com funcionamento local.
+**0.3.0**
+
+## O que já funciona
+
+- dashboard com resumo mensal;
+- cronômetro de atividade;
+- registro manual de horas;
+- edição e exclusão de atividades;
+- metas mensais e anuais;
+- progresso mês a mês;
+- cadastro e perfil completo de estudantes;
+- busca e filtros de estudantes;
+- histórico de estudos e revisitas;
+- agenda com estudos, revisitas, ligações e outros compromissos;
+- conclusão, edição e exclusão de compromissos;
+- lembrete de compromissos ao abrir/retomar o aplicativo;
+- tema claro e escuro;
+- onboarding inicial;
+- backup e restauração em JSON;
+- exportação de relatório em CSV;
+- exportação de resumo em TXT;
+- banco SQLite local;
+- testes automatizados;
+- builds automatizados para Android e validação de iOS.
+
+## Arquitetura
+
+```text
+src/
+├── assets/
+│   ├── icon.png
+│   └── splash.png
+├── main.py
+└── pioneiro_pro/
+    ├── app.py
+    ├── database/
+    ├── pages/
+    ├── repositories/
+    ├── services/
+    └── utils/
+tests/
+docs/
+```
+
+Fluxo principal de dados:
+
+```text
+Tela → Repository/Service → SQLite
+```
 
 ## Stack
 
@@ -12,53 +60,26 @@ Centralizar o acompanhamento pessoal de atividades, horas, estudantes, visitas, 
 - Flet
 - SQLite
 - Pytest
-- Ruff
-
-## Estrutura
-
-```text
-src/
-├── main.py
-└── pioneiro_pro/
-    ├── app.py
-    ├── database/
-    ├── models/
-    ├── pages/
-    ├── repositories/
-    ├── services/
-    └── utils/
-tests/
-```
+- GitHub Actions
 
 ## Executar localmente
 
-```bash
+Windows:
+
+```powershell
 python -m venv .venv
 .venv\Scripts\activate
 pip install -e .
 flet run
 ```
 
-No macOS/Linux:
+macOS/Linux:
 
 ```bash
+python -m venv .venv
 source .venv/bin/activate
 pip install -e .
 flet run
-```
-
-## Testar no celular
-
-Android:
-
-```bash
-flet run --android
-```
-
-iOS:
-
-```bash
-flet run --ios
 ```
 
 ## Gerar builds
@@ -66,27 +87,41 @@ flet run --ios
 Android APK:
 
 ```bash
-flet build apk
+flet build apk --yes
 ```
 
-Android App Bundle para Google Play:
+Android App Bundle:
 
 ```bash
-flet build aab
+flet build aab --yes
 ```
 
-iOS:
+Simulador iOS:
 
 ```bash
-flet build ipa
+flet build ios-simulator --yes
 ```
 
-> A compilação final para iOS exige macOS/Xcode e as credenciais Apple apropriadas.
+IPA para distribuição:
 
-## Identidade do aplicativo
+```bash
+flet build ipa --yes
+```
+
+A geração e assinatura final de IPA para distribuição exigem ambiente Apple e credenciais válidas do Apple Developer.
+
+## Identidade
 
 - Produto: Pioneiro Pro
-- Projeto: pioneiro_pro_mobile
+- Projeto: `pioneiro_pro_mobile`
 - Bundle ID atual: `br.com.pioneiropro.app`
 
-O bundle ID deve ser confirmado antes da publicação definitiva nas lojas.
+Confirme o bundle ID antes da primeira publicação definitiva nas lojas.
+
+## Privacidade
+
+A versão atual trabalha de forma local-first. Consulte [docs/PRIVACIDADE.md](docs/PRIVACIDADE.md).
+
+## Publicação
+
+Consulte [docs/PUBLICACAO.md](docs/PUBLICACAO.md) para os passos de Google Play e App Store.
