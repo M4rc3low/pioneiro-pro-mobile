@@ -1,3 +1,4 @@
+from .android_notification_service import AndroidNotificationService
 from .backup_service import BackupService
 from .cronometro_service import CronometroService
 from .exportacao_service import ExportacaoService
@@ -12,6 +13,7 @@ from .location_service import (
 from .proximidade_service import ProximidadeService
 
 __all__ = [
+    "AndroidNotificationService",
     "BackupService",
     "CronometroService",
     "ExportacaoService",
