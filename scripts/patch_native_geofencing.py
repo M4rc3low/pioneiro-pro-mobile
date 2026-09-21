@@ -9,7 +9,7 @@ IMPORT_LINE = (
     "import 'package:pioneiro_pro_geofencing/pioneiro_pro_geofencing.dart' "
     "as pioneiro_pro_geofencing;"
 )
-EXTENSION_LINE = "    pioneiro_pro_geofencing.Extension(),"
+EXTENSION_LINE = "  pioneiro_pro_geofencing.Extension(),"
 
 
 def patch_pubspec(pubspec: Path) -> None:
@@ -29,43 +29,41 @@ def patch_pubspec(pubspec: Path) -> None:
     pubspec.write_text(text.replace(marker, addition, 1), encoding="utf-8")
 
 
-def patch_main(main_dart: Path) -> None:
-    text = main_dart.read_text(encoding="utf-8")
+def patch_generated(generated_dart: Path) -> None:
+    text = generated_dart.read_text(encoding="utf-8")
 
     if IMPORT_LINE not in text:
-        import_marker = "import 'package:flet/flet.dart';"
-        if import_marker in text:
-            text = text.replace(
-                import_marker,
-                f"{import_marker}\n{IMPORT_LINE}",
-                1,
+        marker = "import 'package:flet/flet.dart';"
+        if marker not in text:
+            raise RuntimeError(
+                "Import base do Flet não encontrado em flet_generated.dart."
             )
-        else:
-            marker = "const bool isProduction"
-            if marker not in text:
-                raise RuntimeError("Ponto de importação do main.dart não encontrado.")
-            text = text.replace(marker, f"{IMPORT_LINE}\n\n{marker}", 1)
+        text = text.replace(marker, f"{marker}\n{IMPORT_LINE}", 1)
 
     if EXTENSION_LINE.strip() not in text:
         marker = "List<FletExtension> extensions = [\n"
         if marker not in text:
-            raise RuntimeError("Lista de extensões Flet não encontrada no main.dart.")
+            raise RuntimeError(
+                "Lista de extensões não encontrada em flet_generated.dart."
+            )
         text = text.replace(marker, marker + EXTENSION_LINE + "\n", 1)
 
-    main_dart.write_text(text, encoding="utf-8")
+    generated_dart.write_text(text, encoding="utf-8")
 
 
 def patch_project(project_root: Path) -> None:
     pubspec = project_root / "pubspec.yaml"
-    main_dart = project_root / "lib" / "main.dart"
+    generated_dart = project_root / "lib" / "flet_generated.dart"
 
     if not pubspec.exists():
         raise FileNotFoundError(f"pubspec.yaml não encontrado em {project_root}")
-    if not main_dart.exists():
-        raise FileNotFoundError(f"main.dart não encontrado em {project_root}")
+    if not generated_dart.exists():
+        raise FileNotFoundError(
+            f"flet_generated.dart não encontrado em {project_root}"
+        )
 
     patch_pubspec(pubspec)
-    patch_main(main_dart)
+    patch_generated(generated_dart)
 
 
 def main() -> None:
