@@ -5,10 +5,33 @@ import flet as ft
 
 ACCENT = ft.Colors.BLUE_600
 ACCENT_STRONG = ft.Colors.BLUE_700
+ACCENT_SOFT = ft.Colors.BLUE_100
 SUCCESS = ft.Colors.GREEN_600
 WARNING = ft.Colors.ORANGE_600
 DANGER = ft.Colors.RED_600
-MUTED = ft.Colors.GREY_500
+MUTED = ft.Colors.ON_SURFACE_VARIANT
+
+
+def brand_gradient() -> ft.LinearGradient:
+    return ft.LinearGradient(
+        begin=ft.Alignment.TOP_LEFT,
+        end=ft.Alignment.BOTTOM_RIGHT,
+        colors=[
+            ft.Colors.BLUE_800,
+            ft.Colors.BLUE_600,
+            ft.Colors.CYAN_500,
+        ],
+        stops=[0.0, 0.62, 1.0],
+    )
+
+
+def soft_shadow() -> ft.BoxShadow:
+    return ft.BoxShadow(
+        blur_radius=18,
+        spread_radius=0,
+        color=ft.Colors.with_opacity(0.08, ft.Colors.BLACK),
+        offset=ft.Offset(0, 5),
+    )
 
 
 def icon_badge(
@@ -22,7 +45,7 @@ def icon_badge(
         width=box_size,
         height=box_size,
         border_radius=14,
-        bgcolor=ft.Colors.SURFACE_CONTAINER_LOW,
+        bgcolor=ft.Colors.with_opacity(0.10, color),
         alignment=ft.Alignment.CENTER,
         content=ft.Icon(icon, color=color, size=size),
     )
@@ -35,12 +58,18 @@ def panel(
     radius: int = 22,
     expand: bool | int | None = None,
     bgcolor: str | None = None,
+    elevated: bool = True,
 ) -> ft.Container:
     return ft.Container(
         expand=expand,
         padding=padding,
         border_radius=radius,
         bgcolor=bgcolor or ft.Colors.SURFACE,
+        border=ft.Border.all(
+            width=1,
+            color=ft.Colors.with_opacity(0.07, ft.Colors.OUTLINE),
+        ),
+        shadow=soft_shadow() if elevated else None,
         content=content,
     )
 
@@ -53,14 +82,23 @@ def page_header(
     trailing: ft.Control | None = None,
 ) -> ft.Control:
     controls: list[ft.Control] = [
-        icon_badge(icon, box_size=48, size=23),
+        icon_badge(icon, box_size=50, size=24),
         ft.Container(
             expand=True,
             content=ft.Column(
-                spacing=2,
+                spacing=3,
                 controls=[
-                    ft.Text(title, size=27, weight=ft.FontWeight.BOLD),
-                    ft.Text(subtitle, size=13, color=MUTED),
+                    ft.Text(
+                        title,
+                        size=27,
+                        weight=ft.FontWeight.BOLD,
+                        color=ft.Colors.ON_SURFACE,
+                    ),
+                    ft.Text(
+                        subtitle,
+                        size=13,
+                        color=MUTED,
+                    ),
                 ],
             ),
         ),
@@ -81,7 +119,12 @@ def section_header(
     trailing: ft.Control | None = None,
 ) -> ft.Control:
     text_controls: list[ft.Control] = [
-        ft.Text(title, size=18, weight=ft.FontWeight.BOLD),
+        ft.Text(
+            title,
+            size=18,
+            weight=ft.FontWeight.BOLD,
+            color=ft.Colors.ON_SURFACE,
+        ),
     ]
     if subtitle:
         text_controls.append(ft.Text(subtitle, size=12, color=MUTED))
@@ -89,7 +132,7 @@ def section_header(
     controls: list[ft.Control] = [
         ft.Container(
             expand=True,
-            content=ft.Column(spacing=1, controls=text_controls),
+            content=ft.Column(spacing=2, controls=text_controls),
         )
     ]
     if trailing is not None:
@@ -111,15 +154,31 @@ def metric_card(
     helper: str | None = None,
 ) -> ft.Container:
     controls: list[ft.Control] = [
-        icon_badge(icon, color=color, box_size=40, size=20),
+        ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            controls=[
+                icon_badge(icon, color=color, box_size=42, size=21),
+                ft.Container(
+                    width=6,
+                    height=6,
+                    border_radius=99,
+                    bgcolor=color,
+                ),
+            ],
+        ),
         ft.Text(label, size=12, color=MUTED),
-        ft.Text(value, size=24, weight=ft.FontWeight.BOLD),
+        ft.Text(
+            value,
+            size=25,
+            weight=ft.FontWeight.BOLD,
+            color=ft.Colors.ON_SURFACE,
+        ),
     ]
     if helper:
         controls.append(ft.Text(helper, size=11, color=MUTED))
 
     return panel(
-        ft.Column(spacing=7, controls=controls),
+        ft.Column(spacing=8, controls=controls),
         padding=16,
         radius=20,
         expand=True,
@@ -147,7 +206,7 @@ def status_pill(
     return ft.Container(
         padding=ft.Padding.symmetric(horizontal=10, vertical=6),
         border_radius=999,
-        bgcolor=ft.Colors.SURFACE_CONTAINER_LOW,
+        bgcolor=ft.Colors.with_opacity(0.12, color),
         content=ft.Row(spacing=5, tight=True, controls=controls),
     )
 
@@ -160,12 +219,13 @@ def empty_state(
     action: ft.Control | None = None,
 ) -> ft.Container:
     controls: list[ft.Control] = [
-        icon_badge(icon, box_size=54, size=26),
+        icon_badge(icon, box_size=56, size=27),
         ft.Text(
             title,
-            size=16,
+            size=17,
             weight=ft.FontWeight.BOLD,
             text_align=ft.TextAlign.CENTER,
+            color=ft.Colors.ON_SURFACE,
         ),
         ft.Text(
             subtitle,
@@ -179,11 +239,11 @@ def empty_state(
 
     return panel(
         ft.Column(
-            spacing=8,
+            spacing=9,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             controls=controls,
         ),
-        padding=22,
+        padding=24,
     )
 
 
@@ -206,9 +266,13 @@ def action_tile(
                 ft.Container(
                     expand=True,
                     content=ft.Column(
-                        spacing=2,
+                        spacing=3,
                         controls=[
-                            ft.Text(title, weight=ft.FontWeight.BOLD),
+                            ft.Text(
+                                title,
+                                weight=ft.FontWeight.BOLD,
+                                color=ft.Colors.ON_SURFACE,
+                            ),
                             ft.Text(subtitle, size=12, color=MUTED),
                         ],
                     ),
@@ -219,4 +283,6 @@ def action_tile(
         padding=14,
     )
     tile.on_click = on_click
+    tile.ink = True
+    tile.ink_color = ft.Colors.with_opacity(0.06, color)
     return tile
