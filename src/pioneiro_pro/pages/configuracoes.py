@@ -1,11 +1,17 @@
+from datetime import date
+
 import flet as ft
 
 from pioneiro_pro.repositories import ConfiguracaoRepository
+from pioneiro_pro.services import BackupService, ExportacaoService
 
 
 def configuracoes_view(
     page: ft.Page,
     configuracoes: ConfiguracaoRepository,
+    backup: BackupService,
+    exportacao: ExportacaoService,
+    on_restored,
 ) -> ft.Control:
     config = configuracoes.todas()
 
@@ -33,14 +39,17 @@ def configuracoes_view(
     )
     mensagem = ft.Text(size=13)
 
+    def set_mensagem(texto: str, sucesso: bool = True) -> None:
+        mensagem.value = texto
+        mensagem.color = ft.Colors.GREEN_700 if sucesso else ft.Colors.RED
+        mensagem.update()
+
     def salvar(_):
         try:
             mensal = max(0, int(float(meta_mes.value or 0)))
             anual = max(0, int(float(meta_ano.value or 0)))
         except ValueError:
-            mensagem.value = "As metas precisam ser números."
-            mensagem.color = ft.Colors.RED
-            mensagem.update()
+            set_mensagem("As metas precisam ser números.", False)
             return
 
         configuracoes.definir("nome_pioneiro", (nome.value or "").strip())
@@ -56,10 +65,71 @@ def configuracoes_view(
             ft.ThemeMode.DARK if tema_escuro.value else ft.ThemeMode.LIGHT
         )
         page.update()
+        set_mensagem("Configurações salvas.")
 
-        mensagem.value = "Configurações salvas."
-        mensagem.color = ft.Colors.GREEN_700
-        mensagem.update()
+    async def exportar_backup(_):
+        try:
+            nome_arquivo = f"pioneiro-pro-backup-{date.today().isoformat()}.json"
+            destino = await ft.FilePicker().save_file(
+                dialog_title="Salvar backup",
+                file_name=nome_arquivo,
+                allowed_extensions=["json"],
+                src_bytes=backup.exportar_bytes(),
+            )
+            if destino is not None or page.web:
+                set_mensagem("Backup exportado com sucesso.")
+        except Exception as exc:
+            set_mensagem(f"Não foi possível exportar o backup: {exc}", False)
+
+    async def restaurar_backup(_):
+        try:
+            arquivos = await ft.FilePicker().pick_files(
+                dialog_title="Selecionar backup",
+                allow_multiple=False,
+                allowed_extensions=["json"],
+                with_data=True,
+            )
+            if not arquivos:
+                return
+
+            conteudo = arquivos[0].bytes
+            if conteudo is None:
+                set_mensagem("Não foi possível ler o arquivo selecionado.", False)
+                return
+
+            backup.restaurar_bytes(conteudo)
+            set_mensagem("Backup restaurado. Os dados foram recarregados.")
+            on_restored()
+        except Exception as exc:
+            set_mensagem(f"Backup inválido ou não pôde ser restaurado: {exc}", False)
+
+    async def exportar_csv(_):
+        try:
+            nome_arquivo = f"pioneiro-pro-relatorio-{date.today().isoformat()}.csv"
+            destino = await ft.FilePicker().save_file(
+                dialog_title="Salvar relatório",
+                file_name=nome_arquivo,
+                allowed_extensions=["csv"],
+                src_bytes=exportacao.relatorio_csv(),
+            )
+            if destino is not None or page.web:
+                set_mensagem("Relatório CSV exportado.")
+        except Exception as exc:
+            set_mensagem(f"Não foi possível exportar o relatório: {exc}", False)
+
+    async def exportar_resumo(_):
+        try:
+            nome_arquivo = f"pioneiro-pro-resumo-{date.today().isoformat()}.txt"
+            destino = await ft.FilePicker().save_file(
+                dialog_title="Salvar resumo",
+                file_name=nome_arquivo,
+                allowed_extensions=["txt"],
+                src_bytes=exportacao.resumo_txt(),
+            )
+            if destino is not None or page.web:
+                set_mensagem("Resumo exportado.")
+        except Exception as exc:
+            set_mensagem(f"Não foi possível exportar o resumo: {exc}", False)
 
     return ft.ListView(
         expand=True,
@@ -68,7 +138,7 @@ def configuracoes_view(
         controls=[
             ft.Text("Configurações", size=26, weight=ft.FontWeight.BOLD),
             ft.Text(
-                "Personalize o Pioneiro Pro e suas metas.",
+                "Personalize o Pioneiro Pro e proteja seus dados.",
                 color=ft.Colors.GREY_600,
             ),
             ft.Container(
@@ -112,22 +182,45 @@ def configuracoes_view(
                     ]
                 ),
             ),
-            mensagem,
             ft.FilledButton(
                 "Salvar configurações",
                 icon=ft.Icons.SAVE_OUTLINED,
                 on_click=salvar,
             ),
+            mensagem,
             ft.Divider(),
+            ft.Text("Dados e segurança", size=18, weight=ft.FontWeight.BOLD),
             ft.ListTile(
                 leading=ft.Icon(ft.Icons.BACKUP_OUTLINED),
-                title=ft.Text("Backup"),
-                subtitle=ft.Text("Backup e restauração entram na próxima etapa."),
+                title=ft.Text("Criar backup"),
+                subtitle=ft.Text("Salva estudantes, agenda, registros e configurações."),
+                on_click=exportar_backup,
             ),
+            ft.ListTile(
+                leading=ft.Icon(ft.Icons.RESTORE),
+                title=ft.Text("Restaurar backup"),
+                subtitle=ft.Text("Substitui os dados atuais pelos dados do arquivo."),
+                on_click=restaurar_backup,
+            ),
+            ft.Divider(),
+            ft.Text("Exportação", size=18, weight=ft.FontWeight.BOLD),
+            ft.ListTile(
+                leading=ft.Icon(ft.Icons.TABLE_VIEW_OUTLINED),
+                title=ft.Text("Exportar relatório CSV"),
+                subtitle=ft.Text("Planilha compatível com Excel e Google Sheets."),
+                on_click=exportar_csv,
+            ),
+            ft.ListTile(
+                leading=ft.Icon(ft.Icons.DESCRIPTION_OUTLINED),
+                title=ft.Text("Exportar resumo"),
+                subtitle=ft.Text("Resumo simples em arquivo de texto."),
+                on_click=exportar_resumo,
+            ),
+            ft.Divider(),
             ft.ListTile(
                 leading=ft.Icon(ft.Icons.INFO_OUTLINE),
                 title=ft.Text("Pioneiro Pro"),
-                subtitle=ft.Text("Versão 0.2.0 • Python + Flet"),
+                subtitle=ft.Text("Versão 0.3.0 • Python + Flet"),
             ),
         ],
     )
