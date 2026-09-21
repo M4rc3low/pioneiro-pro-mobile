@@ -3,11 +3,12 @@ name: Mobile Build
 on:
   workflow_dispatch:
   push:
-    branches: ["main"]
-    paths:
-      - ".github/workflows/build-mobile.yml"
-      - "pyproject.toml"
-      - "src/**"
+    tags:
+      - "v*"
+
+concurrency:
+  group: mobile-build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   android:
