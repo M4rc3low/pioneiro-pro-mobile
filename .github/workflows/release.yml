@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Versão a publicar, por exemplo v0.5.1"
+        description: "Versão a publicar, por exemplo v0.5.2"
         required: true
-        default: "v0.5.1"
+        default: "v0.5.2"
 
 permissions:
   contents: write
