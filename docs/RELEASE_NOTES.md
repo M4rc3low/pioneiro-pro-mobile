@@ -1,6 +1,12 @@
-# Pioneiro Pro 0.5.0
+# Pioneiro Pro 0.5.1
 
 Esta versão dá um salto visual no Pioneiro Pro e mantém os recursos de proximidade, publicações e compartilhamento mensal.
+
+## Novo ícone
+
+- novo ícone oficial com relógio, sol, nuvem e chuva;
+- identidade visual mais alinhada com o propósito do Pioneiro Pro;
+- pacote Android/iOS recompilado com o novo asset.
 
 ## Nova experiência visual
 
