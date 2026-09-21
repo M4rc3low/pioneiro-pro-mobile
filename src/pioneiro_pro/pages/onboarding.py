@@ -1,7 +1,7 @@
 import flet as ft
 
 from pioneiro_pro.repositories import ConfiguracaoRepository
-from pioneiro_pro.ui import ACCENT, DANGER, SUCCESS, brand_gradient, icon_badge, panel
+from pioneiro_pro.ui import ACCENT, DANGER, SUCCESS, app_logo, brand_gradient, icon_badge, panel
 
 
 def onboarding_view(
@@ -73,18 +73,7 @@ def onboarding_view(
             spacing=10,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
-                ft.Container(
-                    width=72,
-                    height=72,
-                    border_radius=24,
-                    bgcolor=ft.Colors.BLUE_600,
-                    alignment=ft.Alignment.CENTER,
-                    content=ft.Icon(
-                        ft.Icons.EXPLORE_OUTLINED,
-                        size=38,
-                        color=ft.Colors.WHITE,
-                    ),
-                ),
+                app_logo(78, 24),
                 ft.Text(
                     "Pioneiro Pro",
                     size=32,
