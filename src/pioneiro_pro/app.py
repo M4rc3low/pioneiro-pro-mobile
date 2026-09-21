@@ -7,11 +7,18 @@ from pioneiro_pro.pages import (
     agenda_view,
     configuracoes_view,
     dashboard_view,
+    estudante_detalhes_view,
     estudantes_view,
     registrar_view,
     relatorios_view,
 )
-from pioneiro_pro.repositories import AtividadeRepository, EstudanteRepository
+from pioneiro_pro.repositories import (
+    AtividadeRepository,
+    ConfiguracaoRepository,
+    EstudanteRepository,
+    VisitaRepository,
+)
+from pioneiro_pro.services import CronometroService
 
 
 class PioneiroProApp:
@@ -22,6 +29,9 @@ class PioneiroProApp:
 
         self.atividades = AtividadeRepository(self.database)
         self.estudantes = EstudanteRepository(self.database)
+        self.visitas = VisitaRepository(self.database)
+        self.configuracoes = ConfiguracaoRepository(self.database)
+        self.cronometro = CronometroService()
 
         self.current_key = "dashboard"
         self.content = ft.Container(expand=True)
@@ -59,10 +69,14 @@ class PioneiroProApp:
         )
 
     def mount(self) -> None:
+        config = self.configuracoes.todas()
+
         self.page.title = "Pioneiro Pro"
         self.page.padding = 0
-        self.page.bgcolor = ft.Colors.GREY_100
-        self.page.theme_mode = ft.ThemeMode.LIGHT
+        self.page.bgcolor = ft.Colors.SURFACE_CONTAINER_LOW
+        self.page.theme_mode = (
+            ft.ThemeMode.DARK if config["tema"] == "escuro" else ft.ThemeMode.LIGHT
+        )
         self.page.theme = ft.Theme(color_scheme_seed=ft.Colors.BLUE)
         self.page.navigation_bar = self.nav
 
@@ -91,35 +105,58 @@ class PioneiroProApp:
         keys = ["dashboard", "registrar", "estudantes", "agenda", "relatorios"]
         self.navigate(keys[index], update_nav=False)
 
-    def navigate(self, key: str, update_nav: bool = True) -> None:
+    def navigate(self, key: str, update_nav: bool = True, **kwargs) -> None:
         self.current_key = key
 
         if key == "dashboard":
             control = dashboard_view(
                 self.atividades,
                 self.estudantes,
+                self.visitas,
+                self.configuracoes,
                 self.navigate,
             )
         elif key == "registrar":
             control = registrar_view(
-                self.atividades,
+                page=self.page,
+                atividades=self.atividades,
+                cronometro=self.cronometro,
+                is_visible=lambda: self.current_key == "registrar",
                 on_saved=lambda: self.navigate("dashboard"),
             )
         elif key == "estudantes":
-            control = estudantes_view(self.estudantes)
+            control = estudantes_view(
+                self.estudantes,
+                on_open=lambda estudante_id: self.navigate(
+                    "estudante_detalhes",
+                    estudante_id=estudante_id,
+                ),
+            )
+        elif key == "estudante_detalhes":
+            estudante_id = int(kwargs.get("estudante_id", 0))
+            control = estudante_detalhes_view(
+                estudante_id=estudante_id,
+                estudantes=self.estudantes,
+                visitas=self.visitas,
+                on_back=lambda: self.navigate("estudantes"),
+                on_deleted=lambda: self.navigate("estudantes"),
+            )
         elif key == "agenda":
-            control = agenda_view()
+            control = agenda_view(self.visitas, self.estudantes)
         elif key == "relatorios":
-            control = relatorios_view(self.atividades)
+            control = relatorios_view(self.atividades, self.configuracoes)
         elif key == "configuracoes":
-            control = configuracoes_view()
+            control = configuracoes_view(self.page, self.configuracoes)
         else:
+            key = "dashboard"
+            self.current_key = key
             control = dashboard_view(
                 self.atividades,
                 self.estudantes,
+                self.visitas,
+                self.configuracoes,
                 self.navigate,
             )
-            key = "dashboard"
 
         self.content.content = control
 
@@ -128,6 +165,7 @@ class PioneiroProApp:
                 "dashboard": 0,
                 "registrar": 1,
                 "estudantes": 2,
+                "estudante_detalhes": 2,
                 "agenda": 3,
                 "relatorios": 4,
             }
