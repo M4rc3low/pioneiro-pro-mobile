@@ -31,7 +31,9 @@ def configuracoes_view(
     exportacao: ExportacaoService,
     geolocator,
     seguranca_local: LocalSecurityService,
-    on_restored,
+    native_geofencing=None,
+    on_proximity_changed=lambda: None,
+    on_restored=lambda: None,
 ) -> ft.Control:
     config = configuracoes.todas()
 
@@ -139,11 +141,36 @@ def configuracoes_view(
             set_mensagem("Permissão de localização não concedida.", False)
             return
 
+        if native_geofencing is not None:
+            try:
+                permitido = await native_geofencing.request_permissions()
+            except Exception as exc:
+                permitido = False
+                set_mensagem(
+                    f"Não foi possível preparar o geofencing nativo: {exc}",
+                    False,
+                )
+
+            if not permitido:
+                proximidade_ativa.value = False
+                proximidade_ativa.update()
+                configuracoes.definir("proximidade_ativa", "0")
+                if not mensagem.value:
+                    set_mensagem(
+                        "Para avisos mesmo com o app encerrado, permita localização "
+                        "o tempo todo nas configurações do aparelho.",
+                        False,
+                    )
+                return
+
         proximidade_ativa.value = True
         proximidade_ativa.update()
         configuracoes.definir("proximidade_ativa", "1")
+        on_proximity_changed()
 
-        if background_location_granted(resultado.permission):
+        if native_geofencing is not None:
+            set_mensagem("Avisos nativos por proximidade ativados.")
+        elif background_location_granted(resultado.permission):
             set_mensagem("Avisos por proximidade ativados.")
         else:
             mostrar_orientacao_background()
@@ -156,6 +183,7 @@ def configuracoes_view(
     async def alterar_proximidade(event):
         if not event.control.value:
             configuracoes.definir("proximidade_ativa", "0")
+            on_proximity_changed()
             set_mensagem("Avisos por proximidade desativados.")
             return
 
