@@ -11,7 +11,7 @@ class ConfiguracaoRepository:
         "meta_horas_ano": "600",
         "tema": "claro",
         "onboarding_concluido": "0",
-        "proximidade_ativa": "1",
+        "proximidade_ativa": "0",
         "raio_proximidade_padrao": "200",
     }
 
