@@ -21,6 +21,7 @@ from pioneiro_pro.repositories import (
     VisitaRepository,
 )
 from pioneiro_pro.services import (
+    AndroidNotificationService,
     BackupService,
     CronometroService,
     ExportacaoService,
@@ -48,6 +49,8 @@ class PioneiroProApp:
         self.proximidade = ProximidadeService(self.estudantes, self.visitas)
         self.url_launcher = ft.UrlLauncher()
         self.geolocator = None
+        self.notifications = None
+        self._app_em_primeiro_plano = True
 
         self.current_key = "dashboard"
         self.content = ft.Container(expand=True)
@@ -104,6 +107,7 @@ class PioneiroProApp:
         )
         self.page.on_app_lifecycle_state_change = self._on_lifecycle
         self._configurar_geolocalizacao()
+        self.notifications = AndroidNotificationService(self.page)
 
         self.page.add(
             ft.SafeArea(
@@ -167,7 +171,7 @@ class PioneiroProApp:
 
     def _on_position_change(self, event) -> None:
         config = self.configuracoes.todas()
-        if config.get("proximidade_ativa", "1") != "1":
+        if config.get("proximidade_ativa", "0") != "1":
             return
 
         encontrados = self.proximidade.verificar(
@@ -190,6 +194,10 @@ class PioneiroProApp:
                 rota_url,
                 mode=ft.LaunchMode.EXTERNAL_APPLICATION,
             )
+
+        if not self._app_em_primeiro_plano and self.notifications is not None:
+            self.page.run_task(self._notificar_proximidade_android, item)
+            return
 
         self.page.show_dialog(
             ft.SnackBar(
@@ -242,12 +250,20 @@ class PioneiroProApp:
         self.navigate("dashboard")
         self._mostrar_lembrete_do_dia()
 
+    async def _notificar_proximidade_android(self, item: dict) -> None:
+        enviado = await self.notifications.show_proximity(item)
+        if not enviado:
+            self.proximidade.liberar_alerta(str(item["chave"]))
+
     def _on_lifecycle(self, event: ft.AppLifecycleStateChangeEvent) -> None:
-        if event.state in {
+        foreground_states = {
             ft.AppLifecycleState.RESUME,
             ft.AppLifecycleState.SHOW,
             ft.AppLifecycleState.RESTART,
-        }:
+        }
+        self._app_em_primeiro_plano = event.state in foreground_states
+
+        if self._app_em_primeiro_plano:
             self._mostrar_lembrete_do_dia(force=True)
 
     def _mostrar_lembrete_do_dia(self, force: bool = False) -> None:
