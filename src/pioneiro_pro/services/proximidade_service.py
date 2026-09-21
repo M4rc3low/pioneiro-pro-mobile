@@ -17,6 +17,17 @@ class ProximidadeService:
         self._ultimos_alertas: dict[str, datetime] = {}
 
     @staticmethod
+    def url_google_maps(latitude: float, longitude: float) -> str:
+        lat = f"{float(latitude):.7f}"
+        lon = f"{float(longitude):.7f}"
+        return (
+            "https://www.google.com/maps/dir/?api=1"
+            f"&destination={lat}%2C{lon}"
+            "&travelmode=driving"
+            "&dir_action=navigate"
+        )
+
+    @staticmethod
     def distancia_metros(
         lat1: float,
         lon1: float,
@@ -74,6 +85,8 @@ class ProximidadeService:
                             "distancia_m": int(round(distancia)),
                             "visita_id": visita["id"],
                             "estudante_id": visita.get("estudante_id"),
+                            "latitude": float(visita["latitude"]),
+                            "longitude": float(visita["longitude"]),
                         }
                     )
                     self._ultimos_alertas[chave] = agora
@@ -105,6 +118,8 @@ class ProximidadeService:
                             "nome": estudante["nome"],
                             "distancia_m": int(round(distancia)),
                             "estudante_id": estudante_id,
+                            "latitude": float(estudante["latitude"]),
+                            "longitude": float(estudante["longitude"]),
                         }
                     )
                     self._ultimos_alertas[chave] = agora
