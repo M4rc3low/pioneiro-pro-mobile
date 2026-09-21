@@ -49,6 +49,7 @@ dark_color = "#0F172A"
 
 [tool.flet.android]
 min_sdk_version = 24
+dependencies = ["flet-android-notifications==0.11.2"]
 
 [tool.flet.android.splash]
 color = "#F5F7FB"
@@ -61,6 +62,7 @@ icon_background = "#FFFFFF"
 "android.permission.ACCESS_BACKGROUND_LOCATION" = true
 "android.permission.FOREGROUND_SERVICE" = true
 "android.permission.FOREGROUND_SERVICE_LOCATION" = true
+"android.permission.POST_NOTIFICATIONS" = true
 
 [tool.flet.ios.info]
 NSLocationWhenInUseUsageDescription = "O Pioneiro Pro usa sua localização para avisar quando você estiver perto de uma visita ou estudante cadastrado."
