@@ -14,11 +14,21 @@ A versão atual armazena localmente no dispositivo informações que o próprio 
 - registros de atividades e tempo;
 - nomes, telefones, endereços e observações de estudantes;
 - compromissos de agenda e revisitas;
-- metas e preferências do aplicativo.
+- metas e preferências do aplicativo;
+- quantidades de publicações registradas;
+- coordenadas de locais salvos voluntariamente para alertas de proximidade.
 
 ## Armazenamento
 
 Os dados são mantidos localmente em banco SQLite no dispositivo. O aplicativo não envia automaticamente esses dados para um servidor externo na versão atual.
+
+## Localização
+
+O recurso de proximidade é opcional. Quando ativado, o aplicativo usa a localização do aparelho para comparar sua posição com coordenadas que o próprio usuário salvou em estudantes ou revisitas.
+
+No Android, o recurso pode solicitar permissão de localização em segundo plano para continuar a comparação quando o aplicativo não estiver em primeiro plano. No iOS, permissões equivalentes podem ser solicitadas conforme as regras do sistema.
+
+As coordenadas salvas permanecem no banco local do Pioneiro Pro. A versão atual não envia a localização do usuário ou dos estudantes para um servidor externo.
 
 ## Backup e exportação
 
