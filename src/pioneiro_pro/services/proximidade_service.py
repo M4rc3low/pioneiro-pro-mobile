@@ -57,8 +57,9 @@ class ProximidadeService:
         """Allow an alert to be retried when delivery failed."""
         self._ultimos_alertas.pop(chave, None)
 
-    def regioes_geofence(self) -> list[dict]:
-        """Return normalized native geofence regions for active alerts."""
+    def regioes_geofence(self, limite: int = 100) -> list[dict]:
+        """Return prioritized native geofence regions within OS limits."""
+        limite = max(1, min(100, int(limite)))
         regioes: list[dict] = []
         estudantes_com_revisita: set[int] = set()
 
@@ -66,6 +67,9 @@ class ProximidadeService:
             estudante_id = visita.get("estudante_id")
             if estudante_id is not None:
                 estudantes_com_revisita.add(int(estudante_id))
+
+            if len(regioes) >= limite:
+                break
 
             regioes.append(
                 {
@@ -80,6 +84,9 @@ class ProximidadeService:
             )
 
         for estudante in self.estudantes.listar_com_localizacao():
+            if len(regioes) >= limite:
+                break
+
             estudante_id = int(estudante["id"])
             if estudante_id in estudantes_com_revisita:
                 continue
