@@ -1,35 +1,25 @@
-# Pioneiro Pro 0.3.0
+# Pioneiro Pro 0.4.0
 
-Primeira versão mobile funcional do Pioneiro Pro.
+Esta versão amplia o Pioneiro Pro com recursos de proximidade, publicações e compartilhamento mensal.
 
-## Principais recursos
+## Novidades
 
-- dashboard com resumo do mês e metas;
-- cronômetro de atividade;
-- registro manual de horas;
-- edição, busca, filtro e exclusão de atividades;
-- metas mensais e anuais;
-- perfil completo de estudantes;
-- busca e filtros de estudantes;
-- histórico de estudos e revisitas;
-- agenda com estudos, revisitas, ligações e outros compromissos;
-- lembretes com antecedência configurável;
-- onboarding inicial;
-- tema claro e escuro;
-- backup e restauração em JSON;
-- exportação CSV e TXT;
-- dados locais em SQLite;
-- ícone e splash screen;
-- builds Android e iOS Simulator automatizados.
+- salve a localização de um estudante usando o GPS do aparelho;
+- defina um raio de aviso de 100 m a 1 km;
+- salve uma localização própria para revisitas sem estudante vinculado;
+- receba aviso de proximidade enquanto o monitoramento do aplicativo estiver ativo;
+- registre brochuras, folhetos e outras publicações;
+- corrija posteriormente o tempo e as quantidades de um registro;
+- veja totais de publicações no relatório;
+- compartilhe o relatório mensal pelo menu nativo do Android/iOS, incluindo WhatsApp quando instalado.
+
+## Localização
+
+O recurso é opcional. As coordenadas ficam armazenadas localmente no aparelho. Android e iOS solicitam as permissões do sistema quando o recurso é utilizado.
+
+O Android está configurado para permitir monitoramento de localização em segundo plano. Nesta versão, o aviso específico de proximidade é apresentado pelo aplicativo; notificações nativas independentes com o app totalmente encerrado permanecem uma etapa separada por dependerem de integração nativa adicional.
 
 ## Plataformas
 
-### Android
-A release disponibiliza:
-- APK para instalação direta;
-- AAB para distribuição pela Google Play.
-
-### iOS
-A release disponibiliza o build de iOS Simulator para validação técnica.
-
-A distribuição em iPhone/iPad exige assinatura Apple, certificados e uma conta Apple Developer.
+- Android: APK/AAB
+- iOS: build de simulador; distribuição física continua dependendo de assinatura Apple.
