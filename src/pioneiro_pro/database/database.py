@@ -57,6 +57,8 @@ class Database:
                     tipo TEXT NOT NULL DEFAULT 'estudo',
                     observacao TEXT NOT NULL DEFAULT '',
                     concluida INTEGER NOT NULL DEFAULT 0,
+                    lembrar_minutos_antes INTEGER NOT NULL DEFAULT 30,
+                    notificado INTEGER NOT NULL DEFAULT 0,
                     FOREIGN KEY (estudante_id) REFERENCES estudantes(id) ON DELETE SET NULL
                 );
 
@@ -92,6 +94,18 @@ class Database:
                 "estudantes",
                 "data_inicio",
                 "TEXT NOT NULL DEFAULT ''",
+            )
+            self._ensure_column(
+                connection,
+                "visitas",
+                "lembrar_minutos_antes",
+                "INTEGER NOT NULL DEFAULT 30",
+            )
+            self._ensure_column(
+                connection,
+                "visitas",
+                "notificado",
+                "INTEGER NOT NULL DEFAULT 0",
             )
 
     @staticmethod
