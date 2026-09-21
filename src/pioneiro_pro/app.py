@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import flet as ft
+import flet_geolocator as ftg
 
 from pioneiro_pro.database import Database
 from pioneiro_pro.pages import (
@@ -24,6 +25,7 @@ from pioneiro_pro.services import (
     CronometroService,
     ExportacaoService,
     LembreteService,
+    ProximidadeService,
 )
 
 
@@ -42,6 +44,8 @@ class PioneiroProApp:
         self.backup = BackupService(self.database)
         self.exportacao = ExportacaoService(self.atividades)
         self.lembretes = LembreteService(self.visitas)
+        self.proximidade = ProximidadeService(self.estudantes, self.visitas)
+        self.geolocator = None
 
         self.current_key = "dashboard"
         self.content = ft.Container(expand=True)
@@ -90,6 +94,7 @@ class PioneiroProApp:
         )
         self.page.theme = ft.Theme(color_scheme_seed=ft.Colors.BLUE)
         self.page.on_app_lifecycle_state_change = self._on_lifecycle
+        self._configurar_geolocalizacao()
 
         self.page.add(
             ft.SafeArea(
@@ -111,6 +116,80 @@ class PioneiroProApp:
                 on_finish=self._finalizar_onboarding,
             )
             self.page.update()
+
+    def _configurar_geolocalizacao(self) -> None:
+        if self.page.platform == ft.PagePlatform.ANDROID:
+            config = ftg.GeolocatorAndroidConfiguration(
+                accuracy=ftg.GeolocatorPositionAccuracy.HIGH,
+                distance_filter=50,
+                interval_duration=ft.Duration(seconds=30),
+                foreground_notification_config=ftg.ForegroundNotificationConfiguration(
+                    notification_title="Pioneiro Pro",
+                    notification_text="Monitorando estudantes e revisitas próximas",
+                    notification_channel_name="Localização do Pioneiro Pro",
+                    notification_set_ongoing=True,
+                ),
+            )
+        elif self.page.platform == ft.PagePlatform.IOS:
+            config = ftg.GeolocatorIosConfiguration(
+                accuracy=ftg.GeolocatorPositionAccuracy.HIGH,
+                distance_filter=50,
+                allow_background_location_updates=True,
+                pause_location_updates_automatically=True,
+                show_background_location_indicator=True,
+            )
+        else:
+            config = ftg.GeolocatorConfiguration(
+                accuracy=ftg.GeolocatorPositionAccuracy.HIGH,
+                distance_filter=50,
+            )
+
+        self.geolocator = ftg.Geolocator(
+            configuration=config,
+            on_position_change=self._on_position_change,
+            on_error=self._on_location_error,
+        )
+        self.page.services.append(self.geolocator)
+
+    def _on_location_error(self, event) -> None:
+        # A permissão é solicitada quando o usuário salva a localização
+        # de um estudante. Até lá, erros de localização são silenciosos.
+        return
+
+    def _on_position_change(self, event) -> None:
+        config = self.configuracoes.todas()
+        if config.get("proximidade_ativa", "1") != "1":
+            return
+
+        encontrados = self.proximidade.verificar(
+            float(event.position.latitude),
+            float(event.position.longitude),
+        )
+        if not encontrados:
+            return
+
+        item = encontrados[0]
+        distancia = item["distancia_m"]
+        texto = f'{item["nome"]} está a aproximadamente {distancia} m.'
+
+        if item.get("estudante_id"):
+            acao = "Abrir"
+            on_action = lambda _: self.navigate(
+                "estudante_detalhes",
+                estudante_id=item["estudante_id"],
+            )
+        else:
+            acao = "Agenda"
+            on_action = lambda _: self.navigate("agenda")
+
+        self.page.show_dialog(
+            ft.SnackBar(
+                content=ft.Text(texto),
+                action=acao,
+                on_action=on_action,
+                show_close_icon=True,
+            )
+        )
 
     def _ativar_shell(self) -> None:
         self.page.navigation_bar = self.nav
@@ -204,13 +283,18 @@ class PioneiroProApp:
                 estudante_id=estudante_id,
                 estudantes=self.estudantes,
                 visitas=self.visitas,
+                geolocator=self.geolocator,
                 on_back=lambda: self.navigate("estudantes"),
                 on_deleted=lambda: self.navigate("estudantes"),
             )
         elif key == "agenda":
             control = agenda_view(self.visitas, self.estudantes)
         elif key == "relatorios":
-            control = relatorios_view(self.atividades, self.configuracoes)
+            control = relatorios_view(
+                self.atividades,
+                self.configuracoes,
+                self.exportacao,
+            )
         elif key == "configuracoes":
             control = configuracoes_view(
                 self.page,
