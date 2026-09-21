@@ -27,6 +27,7 @@ from pioneiro_pro.services import (
     LembreteService,
     ProximidadeService,
 )
+from pioneiro_pro.ui import app_logo
 
 
 class PioneiroProApp:
@@ -57,7 +58,7 @@ class PioneiroProApp:
             on_change=self._on_nav_change,
             bgcolor=ft.Colors.SURFACE,
             indicator_color=ft.Colors.with_opacity(0.16, ft.Colors.BLUE_600),
-            elevation=4,
+            elevation=0,
             label_behavior=ft.NavigationBarLabelBehavior.ALWAYS_SHOW,
             destinations=[
                 ft.NavigationBarDestination(
@@ -208,18 +209,7 @@ class PioneiroProApp:
             title=ft.Row(
                 spacing=10,
                 controls=[
-                    ft.Container(
-                        width=38,
-                        height=38,
-                        border_radius=13,
-                        bgcolor=ft.Colors.BLUE_700,
-                        alignment=ft.Alignment.CENTER,
-                        content=ft.Icon(
-                            ft.Icons.EXPLORE_OUTLINED,
-                            color=ft.Colors.WHITE,
-                            size=21,
-                        ),
-                    ),
+                    app_logo(38, 12),
                     ft.Column(
                         spacing=0,
                         controls=[
