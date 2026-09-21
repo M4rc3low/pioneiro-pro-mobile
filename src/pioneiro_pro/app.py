@@ -9,6 +9,7 @@ from pioneiro_pro.pages import (
     dashboard_view,
     estudante_detalhes_view,
     estudantes_view,
+    onboarding_view,
     registrar_view,
     relatorios_view,
 )
@@ -18,7 +19,12 @@ from pioneiro_pro.repositories import (
     EstudanteRepository,
     VisitaRepository,
 )
-from pioneiro_pro.services import CronometroService
+from pioneiro_pro.services import (
+    BackupService,
+    CronometroService,
+    ExportacaoService,
+    LembreteService,
+)
 
 
 class PioneiroProApp:
@@ -31,10 +37,15 @@ class PioneiroProApp:
         self.estudantes = EstudanteRepository(self.database)
         self.visitas = VisitaRepository(self.database)
         self.configuracoes = ConfiguracaoRepository(self.database)
+
         self.cronometro = CronometroService()
+        self.backup = BackupService(self.database)
+        self.exportacao = ExportacaoService(self.atividades)
+        self.lembretes = LembreteService(self.visitas)
 
         self.current_key = "dashboard"
         self.content = ft.Container(expand=True)
+        self._lembrete_mostrado_hoje = False
 
         self.nav = ft.NavigationBar(
             selected_index=0,
@@ -78,8 +89,31 @@ class PioneiroProApp:
             ft.ThemeMode.DARK if config["tema"] == "escuro" else ft.ThemeMode.LIGHT
         )
         self.page.theme = ft.Theme(color_scheme_seed=ft.Colors.BLUE)
-        self.page.navigation_bar = self.nav
+        self.page.on_app_lifecycle_state_change = self._on_lifecycle
 
+        self.page.add(
+            ft.SafeArea(
+                expand=True,
+                content=self.content,
+            )
+        )
+
+        if config.get("onboarding_concluido") == "1":
+            self._ativar_shell()
+            self.navigate("dashboard")
+            self._mostrar_lembrete_do_dia()
+        else:
+            self.page.appbar = None
+            self.page.navigation_bar = None
+            self.current_key = "onboarding"
+            self.content.content = onboarding_view(
+                self.configuracoes,
+                on_finish=self._finalizar_onboarding,
+            )
+            self.page.update()
+
+    def _ativar_shell(self) -> None:
+        self.page.navigation_bar = self.nav
         self.page.appbar = ft.AppBar(
             title=ft.Text("Pioneiro Pro", weight=ft.FontWeight.BOLD),
             center_title=False,
@@ -92,18 +126,48 @@ class PioneiroProApp:
             ],
         )
 
-        self.page.add(
-            ft.SafeArea(
-                expand=True,
-                content=self.content,
+    def _finalizar_onboarding(self) -> None:
+        self._ativar_shell()
+        self.navigate("dashboard")
+        self._mostrar_lembrete_do_dia()
+
+    def _on_lifecycle(self, event: ft.AppLifecycleStateChangeEvent) -> None:
+        if event.state in {
+            ft.AppLifecycleState.RESUME,
+            ft.AppLifecycleState.SHOW,
+            ft.AppLifecycleState.RESTART,
+        }:
+            self._mostrar_lembrete_do_dia(force=True)
+
+    def _mostrar_lembrete_do_dia(self, force: bool = False) -> None:
+        if self._lembrete_mostrado_hoje and not force:
+            return
+
+        mensagem = self.lembretes.mensagem_hoje()
+        if not mensagem:
+            return
+
+        self._lembrete_mostrado_hoje = True
+        self.page.show_dialog(
+            ft.SnackBar(
+                content=ft.Text(mensagem),
+                action="Ver agenda",
+                on_action=lambda _: self.navigate("agenda"),
+                show_close_icon=True,
             )
         )
-        self.navigate("dashboard")
 
     def _on_nav_change(self, event: ft.Event[ft.NavigationBar]) -> None:
         index = event.control.selected_index or 0
         keys = ["dashboard", "registrar", "estudantes", "agenda", "relatorios"]
         self.navigate(keys[index], update_nav=False)
+
+    def _dados_restaurados(self) -> None:
+        config = self.configuracoes.todas()
+        self.page.theme_mode = (
+            ft.ThemeMode.DARK if config["tema"] == "escuro" else ft.ThemeMode.LIGHT
+        )
+        self.navigate("dashboard")
 
     def navigate(self, key: str, update_nav: bool = True, **kwargs) -> None:
         self.current_key = key
@@ -146,7 +210,13 @@ class PioneiroProApp:
         elif key == "relatorios":
             control = relatorios_view(self.atividades, self.configuracoes)
         elif key == "configuracoes":
-            control = configuracoes_view(self.page, self.configuracoes)
+            control = configuracoes_view(
+                self.page,
+                self.configuracoes,
+                self.backup,
+                self.exportacao,
+                self._dados_restaurados,
+            )
         else:
             key = "dashboard"
             self.current_key = key
