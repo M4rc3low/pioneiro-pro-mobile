@@ -198,7 +198,7 @@ def action_tile(
 ) -> ft.Container:
     right = trailing or ft.Icon(ft.Icons.CHEVRON_RIGHT, color=MUTED)
 
-    return panel(
+    tile = panel(
         ft.Row(
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
@@ -218,3 +218,5 @@ def action_tile(
         ),
         padding=14,
     )
+    tile.on_click = on_click
+    return tile
