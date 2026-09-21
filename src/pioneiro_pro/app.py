@@ -29,6 +29,7 @@ from pioneiro_pro.services import (
     ExportacaoService,
     LembreteService,
     LocalSecurityService,
+    NativeGeofencingService,
     ProximidadeService,
 )
 from pioneiro_pro.ui import app_logo
@@ -54,6 +55,7 @@ class PioneiroProApp:
         self.url_launcher = ft.UrlLauncher()
         self.geolocator = None
         self.notifications = None
+        self.native_geofencing = None
         self._app_em_primeiro_plano = True
         self._background_since: datetime | None = None
         self._bloqueado = False
@@ -114,6 +116,7 @@ class PioneiroProApp:
         self.page.on_app_lifecycle_state_change = self._on_lifecycle
         self._configurar_geolocalizacao()
         self.notifications = AndroidNotificationService(self.page)
+        self._configurar_geofencing_nativo()
 
         self.page.add(
             ft.SafeArea(
@@ -170,10 +173,104 @@ class PioneiroProApp:
 
         self.geolocator = ftg.Geolocator(
             configuration=config,
-            on_position_change=self._on_position_change,
+            on_position_change=(
+                None
+                if self.page.platform == ft.PagePlatform.ANDROID
+                else self._on_position_change
+            ),
             on_error=self._on_location_error,
         )
         self.page.services.append(self.geolocator)
+
+    def _configurar_geofencing_nativo(self) -> None:
+        if self.page.platform != ft.PagePlatform.ANDROID:
+            return
+
+        self.native_geofencing = NativeGeofencingService()
+        self.page.services.append(self.native_geofencing)
+        self.page.run_task(self._inicializar_geofencing_nativo)
+
+    async def _inicializar_geofencing_nativo(self) -> None:
+        if self.native_geofencing is None:
+            return
+
+        try:
+            await self.native_geofencing.initialize()
+            await self._sincronizar_geofences_nativos()
+
+            if await self.native_geofencing.is_background_restricted():
+                self.page.show_dialog(
+                    ft.SnackBar(
+                        content=ft.Text(
+                            "O Android restringiu o Pioneiro Pro em segundo plano. "
+                            "Os avisos de proximidade podem não chegar até essa restrição "
+                            "ser removida nas configurações de bateria."
+                        ),
+                        show_close_icon=True,
+                    )
+                )
+
+            await self._processar_geofence_pendente()
+        except Exception as exc:
+            if self.configuracoes.obter("proximidade_ativa", "0") == "1":
+                self.page.show_dialog(
+                    ft.SnackBar(
+                        content=ft.Text(
+                            f"Não foi possível iniciar os avisos nativos de proximidade: {exc}"
+                        ),
+                        show_close_icon=True,
+                    )
+                )
+
+    def _agendar_sync_geofences(self) -> None:
+        if self.native_geofencing is not None:
+            self.page.run_task(self._sincronizar_geofences_nativos)
+
+    async def _sincronizar_geofences_nativos(self) -> None:
+        if self.native_geofencing is None:
+            return
+
+        if self.configuracoes.obter("proximidade_ativa", "0") != "1":
+            await self.native_geofencing.clear_regions()
+            return
+
+        await self.native_geofencing.sync_regions(
+            self.proximidade.regioes_geofence()
+        )
+
+    async def _processar_geofence_pendente(self) -> None:
+        if self.native_geofencing is None:
+            return
+
+        evento = await self.native_geofencing.consume_last_event()
+        if not evento:
+            return
+
+        latitude = evento.get("latitude")
+        longitude = evento.get("longitude")
+        if latitude is None or longitude is None:
+            return
+
+        rota_url = self.proximidade.url_google_maps(
+            float(latitude),
+            float(longitude),
+        )
+        nome = evento.get("nome") or "Contato"
+
+        async def abrir_rota(_):
+            await self.url_launcher.launch_url(
+                rota_url,
+                mode=ft.LaunchMode.EXTERNAL_APPLICATION,
+            )
+
+        self.page.show_dialog(
+            ft.SnackBar(
+                content=ft.Text(f"{nome} está próximo."),
+                action="Como chegar",
+                on_action=abrir_rota,
+                show_close_icon=True,
+            )
+        )
 
     def _on_location_error(self, event) -> None:
         # A permissão é solicitada quando o usuário salva a localização
@@ -345,6 +442,8 @@ class PioneiroProApp:
         self._background_since = None
         if not self._bloqueado:
             self._mostrar_lembrete_do_dia(force=True)
+            if self.native_geofencing is not None:
+                self.page.run_task(self._processar_geofence_pendente)
 
     def _mostrar_lembrete_do_dia(self, force: bool = False) -> None:
         if self._lembrete_mostrado_hoje and not force:
@@ -414,12 +513,14 @@ class PioneiroProApp:
                 geolocator=self.geolocator,
                 on_back=lambda: self.navigate("estudantes"),
                 on_deleted=lambda: self.navigate("estudantes"),
+                on_geofence_changed=self._agendar_sync_geofences,
             )
         elif key == "agenda":
             control = agenda_view(
                 self.visitas,
                 self.estudantes,
                 self.geolocator,
+                on_geofence_changed=self._agendar_sync_geofences,
             )
         elif key == "relatorios":
             control = relatorios_view(
@@ -435,6 +536,8 @@ class PioneiroProApp:
                 self.exportacao,
                 self.geolocator,
                 self.seguranca_local,
+                self.native_geofencing,
+                self._agendar_sync_geofences,
                 self._dados_restaurados,
             )
         else:
