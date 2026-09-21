@@ -1,6 +1,6 @@
-# Pioneiro Pro 0.5.1
+# Pioneiro Pro 0.5.2
 
-Esta versão dá um salto visual no Pioneiro Pro e mantém os recursos de proximidade, publicações e compartilhamento mensal.
+Esta versão aprimora os alertas de proximidade: ao receber um aviso de estudante ou revisita próxima, você pode abrir diretamente a rota no Google Maps.
 
 ## Novo ícone
 
