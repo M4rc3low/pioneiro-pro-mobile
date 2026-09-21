@@ -6,23 +6,23 @@ import flet as ft
 
 from pioneiro_pro.repositories import AtividadeRepository, ConfiguracaoRepository
 from pioneiro_pro.services import ExportacaoService
+from pioneiro_pro.ui import (
+    ACCENT,
+    DANGER,
+    SUCCESS,
+    WARNING,
+    empty_state,
+    icon_badge,
+    metric_card,
+    page_header,
+    panel,
+    section_header,
+    status_pill,
+)
 from pioneiro_pro.utils import formatar_minutos
 
 
-MESES = [
-    "Jan",
-    "Fev",
-    "Mar",
-    "Abr",
-    "Mai",
-    "Jun",
-    "Jul",
-    "Ago",
-    "Set",
-    "Out",
-    "Nov",
-    "Dez",
-]
+MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
 
 
 def _progresso(atual: int, meta: int) -> float:
@@ -38,8 +38,15 @@ def relatorios_view(
 ) -> ft.Control:
     hoje = date.today()
     config = configuracoes.todas()
-    meta_mes_min = int(float(config["meta_horas_mes"])) * 60
-    meta_ano_min = int(float(config["meta_horas_ano"])) * 60
+
+    try:
+        meta_mes_min = int(float(config["meta_horas_mes"])) * 60
+    except ValueError:
+        meta_mes_min = 0
+    try:
+        meta_ano_min = int(float(config["meta_horas_ano"])) * 60
+    except ValueError:
+        meta_ano_min = 0
 
     total_mes = atividades.total_minutos_mes()
     total_ano = atividades.total_minutos_ano()
@@ -52,7 +59,8 @@ def relatorios_view(
 
     editor = ft.Container(visible=False)
     confirmacao = ft.Container(visible=False)
-    lista_atividades = ft.Column(spacing=8)
+    lista_atividades = ft.Column(spacing=10)
+
     busca = ft.TextField(
         label="Buscar no histórico",
         hint_text="Data, observação ou tipo",
@@ -61,7 +69,7 @@ def relatorios_view(
     filtro_tipo = ft.Dropdown(
         label="Tipo",
         value="todos",
-        width=150,
+        width=145,
         options=[
             ft.DropdownOption(key="todos", text="Todos"),
             ft.DropdownOption(key="ministerio", text="Ministério"),
@@ -86,8 +94,13 @@ def relatorios_view(
     edit_brochuras = ft.TextField(label="Brochuras", keyboard_type=ft.KeyboardType.NUMBER)
     edit_folhetos = ft.TextField(label="Folhetos", keyboard_type=ft.KeyboardType.NUMBER)
     edit_outras = ft.TextField(label="Outras publicações", keyboard_type=ft.KeyboardType.NUMBER)
-    edit_obs = ft.TextField(label="Observação", multiline=True, min_lines=2, max_lines=4)
-    edit_msg = ft.Text(size=13)
+    edit_obs = ft.TextField(
+        label="Observação",
+        multiline=True,
+        min_lines=2,
+        max_lines=4,
+    )
+    edit_msg = ft.Text(size=12)
 
     def fechar_editor(_=None):
         editor_id["value"] = None
@@ -106,6 +119,7 @@ def relatorios_view(
         edit_obs.value = item["observacao"]
         edit_msg.value = ""
         editor.visible = True
+
         for control in [
             edit_data,
             edit_tipo,
@@ -127,14 +141,14 @@ def relatorios_view(
             qtd_folhetos = max(0, int(edit_folhetos.value or 0))
             qtd_outras = max(0, int(edit_outras.value or 0))
         except ValueError:
-            edit_msg.value = "Horas e minutos precisam ser números."
-            edit_msg.color = ft.Colors.RED
+            edit_msg.value = "Tempo e publicações precisam ser números."
+            edit_msg.color = DANGER
             edit_msg.update()
             return
 
         if editor_id["value"] is None or total <= 0:
             edit_msg.value = "Informe um tempo válido."
-            edit_msg.color = ft.Colors.RED
+            edit_msg.color = DANGER
             edit_msg.update()
             return
 
@@ -167,96 +181,97 @@ def relatorios_view(
         cancelar_exclusao()
         carregar_atividades()
 
+    def activity_card(item: dict) -> ft.Container:
+        publicacoes = sum(
+            int(item.get(chave, 0) or 0)
+            for chave in ("brochuras", "folhetos", "outras_publicacoes")
+        )
+        detalhes = f'{item["data"]} • {formatar_minutos(item["minutos"])}'
+        if item.get("observacao"):
+            detalhes += f' • {item["observacao"]}'
+
+        return panel(
+            ft.Row(
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                controls=[
+                    icon_badge(ft.Icons.HISTORY_TOGGLE_OFF),
+                    ft.Container(
+                        expand=True,
+                        content=ft.Column(
+                            spacing=3,
+                            controls=[
+                                ft.Text(
+                                    item["tipo"].replace("_", " ").title(),
+                                    weight=ft.FontWeight.BOLD,
+                                ),
+                                ft.Text(
+                                    detalhes,
+                                    size=11,
+                                    color=ft.Colors.GREY_500,
+                                    max_lines=2,
+                                    overflow=ft.TextOverflow.ELLIPSIS,
+                                ),
+                                (
+                                    status_pill(
+                                        f"{publicacoes} publicação(ões)",
+                                        color=ft.Colors.PURPLE_500,
+                                        icon=ft.Icons.AUTO_STORIES_OUTLINED,
+                                    )
+                                    if publicacoes
+                                    else ft.Container()
+                                ),
+                            ],
+                        ),
+                    ),
+                    ft.IconButton(
+                        icon=ft.Icons.EDIT_OUTLINED,
+                        tooltip="Editar",
+                        on_click=lambda e, registro=item: abrir_editor(e, registro),
+                    ),
+                    ft.IconButton(
+                        icon=ft.Icons.DELETE_OUTLINE,
+                        tooltip="Excluir",
+                        on_click=lambda e, atividade_id=item["id"]: pedir_exclusao(
+                            e,
+                            atividade_id,
+                        ),
+                    ),
+                ],
+            ),
+            padding=13,
+            radius=19,
+        )
+
     def carregar_atividades() -> None:
         tipo = None if filtro_tipo.value == "todos" else filtro_tipo.value
         itens = atividades.buscar(busca.value or "", tipo, limite=100)
-        controls: list[ft.Control] = []
-
-        for item in itens:
-            controls.append(
-                ft.Container(
-                    padding=10,
-                    border_radius=14,
-                    bgcolor=ft.Colors.WHITE,
-                    content=ft.Row(
-                        controls=[
-                            ft.Icon(ft.Icons.SCHEDULE, color=ft.Colors.BLUE_700),
-                            ft.Container(
-                                expand=True,
-                                content=ft.Column(
-                                    spacing=2,
-                                    controls=[
-                                        ft.Text(
-                                            item["tipo"].replace("_", " ").title(),
-                                            weight=ft.FontWeight.BOLD,
-                                        ),
-                                        ft.Text(
-                                            f'{item["data"]} • {formatar_minutos(item["minutos"])}',
-                                            size=12,
-                                            color=ft.Colors.GREY_600,
-                                        ),
-                                        ft.Text(
-                                            " • ".join(
-                                                parte for parte in [
-                                                    f'Brochuras: {item.get("brochuras", 0)}' if item.get("brochuras", 0) else "",
-                                                    f'Folhetos: {item.get("folhetos", 0)}' if item.get("folhetos", 0) else "",
-                                                    f'Outras: {item.get("outras_publicacoes", 0)}' if item.get("outras_publicacoes", 0) else "",
-                                                ] if parte
-                                            ),
-                                            size=12,
-                                            color=ft.Colors.BLUE_700,
-                                            visible=bool(
-                                                item.get("brochuras", 0)
-                                                or item.get("folhetos", 0)
-                                                or item.get("outras_publicacoes", 0)
-                                            ),
-                                        ),
-                                        (
-                                            ft.Text(
-                                                item["observacao"],
-                                                size=12,
-                                                color=ft.Colors.GREY_600,
-                                            )
-                                            if item["observacao"]
-                                            else ft.Container()
-                                        ),
-                                    ],
-                                ),
-                            ),
-                            ft.IconButton(
-                                icon=ft.Icons.EDIT_OUTLINED,
-                                tooltip="Editar",
-                                on_click=lambda e, registro=item: abrir_editor(e, registro),
-                            ),
-                            ft.IconButton(
-                                icon=ft.Icons.DELETE_OUTLINE,
-                                tooltip="Excluir",
-                                on_click=lambda e, atividade_id=item["id"]: pedir_exclusao(
-                                    e, atividade_id
-                                ),
-                            ),
-                        ],
-                    ),
+        lista_atividades.controls = (
+            [activity_card(item) for item in itens]
+            if itens
+            else [
+                empty_state(
+                    ft.Icons.SEARCH_OFF_OUTLINED,
+                    "Nenhum registro encontrado",
+                    "Altere a busca ou o filtro para visualizar outros registros.",
                 )
-            )
+            ]
+        )
 
-        lista_atividades.controls = controls or [
-            ft.Text("Nenhuma atividade registrada.", color=ft.Colors.GREY_600)
-        ]
         try:
             lista_atividades.update()
         except Exception:
             pass
 
     editor.content = ft.Column(
-        spacing=10,
+        spacing=12,
         controls=[
-            ft.Row(
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                controls=[
-                    ft.Text("Editar atividade", size=18, weight=ft.FontWeight.BOLD),
-                    ft.IconButton(icon=ft.Icons.CLOSE, on_click=fechar_editor),
-                ],
+            section_header(
+                "Editar atividade",
+                subtitle="Corrija tempo, publicações ou observações.",
+                trailing=ft.IconButton(
+                    icon=ft.Icons.CLOSE,
+                    on_click=fechar_editor,
+                ),
             ),
             edit_data,
             edit_tipo,
@@ -283,34 +298,46 @@ def relatorios_view(
             ),
         ],
     )
-    editor.padding = 16
-    editor.border_radius = 18
-    editor.bgcolor = ft.Colors.WHITE
+    editor.padding = 18
+    editor.border_radius = 22
+    editor.bgcolor = ft.Colors.SURFACE
 
     confirmacao.content = ft.Row(
         controls=[
-            ft.Text("Excluir este registro?", color=ft.Colors.RED_700),
+            ft.Container(
+                expand=True,
+                content=ft.Text(
+                    "Excluir este registro?",
+                    color=DANGER,
+                    weight=ft.FontWeight.BOLD,
+                ),
+            ),
             ft.TextButton("Cancelar", on_click=cancelar_exclusao),
             ft.FilledButton("Excluir", on_click=confirmar_exclusao),
         ]
     )
     confirmacao.padding = 12
-    confirmacao.border_radius = 12
-    confirmacao.bgcolor = ft.Colors.RED_50
+    confirmacao.border_radius = 16
+    confirmacao.bgcolor = ft.Colors.SURFACE
 
     barras = []
     for item in atividades.totais_por_mes(hoje.year):
         barras.append(
             ft.Row(
                 controls=[
-                    ft.Text(MESES[item["mes"] - 1], width=32, size=12),
+                    ft.Text(MESES[item["mes"] - 1], width=32, size=11),
                     ft.Container(
                         expand=True,
                         content=ft.ProgressBar(
                             value=_progresso(item["minutos"], meta_mes_min),
                         ),
                     ),
-                    ft.Text(formatar_minutos(item["minutos"]), width=70, size=12),
+                    ft.Text(
+                        formatar_minutos(item["minutos"]),
+                        width=68,
+                        size=11,
+                        text_align=ft.TextAlign.RIGHT,
+                    ),
                 ]
             )
         )
@@ -319,101 +346,151 @@ def relatorios_view(
     filtro_tipo.on_change = lambda _: carregar_atividades()
     carregar_atividades()
 
+    progresso_mes = _progresso(total_mes, meta_mes_min)
+    progresso_ano = _progresso(total_ano, meta_ano_min)
+
+    hero = ft.Container(
+        padding=22,
+        border_radius=26,
+        bgcolor=ft.Colors.BLUE_700,
+        content=ft.Column(
+            spacing=10,
+            controls=[
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    controls=[
+                        ft.Column(
+                            spacing=2,
+                            controls=[
+                                ft.Text(
+                                    "Este mês",
+                                    color=ft.Colors.BLUE_100,
+                                    size=12,
+                                ),
+                                ft.Text(
+                                    formatar_minutos(total_mes),
+                                    size=31,
+                                    weight=ft.FontWeight.BOLD,
+                                    color=ft.Colors.WHITE,
+                                ),
+                            ],
+                        ),
+                        status_pill(
+                            f"{round(progresso_mes * 100)}%",
+                            color=SUCCESS,
+                            icon=ft.Icons.TRENDING_UP,
+                        ),
+                    ],
+                ),
+                ft.ProgressBar(
+                    value=progresso_mes,
+                    color=ft.Colors.WHITE,
+                    bgcolor=ft.Colors.BLUE_500,
+                ),
+                ft.Text(
+                    (
+                        f"Meta mensal: {formatar_minutos(meta_mes_min)}"
+                        if meta_mes_min
+                        else "Sem meta mensal definida"
+                    ),
+                    size=11,
+                    color=ft.Colors.BLUE_100,
+                ),
+            ],
+        ),
+    )
+
+    share_card = panel(
+        ft.Column(
+            spacing=10,
+            controls=[
+                section_header(
+                    "Relatório mensal",
+                    subtitle="Pronto para WhatsApp, e-mail ou outro app.",
+                    trailing=icon_badge(
+                        ft.Icons.SHARE_OUTLINED,
+                        color=SUCCESS,
+                    ),
+                ),
+                ft.Text(relatorio_mensal, size=12),
+                ft.Button(
+                    "Compartilhar relatório",
+                    icon=ft.Icons.SHARE,
+                    action=ft.ShareText(
+                        relatorio_mensal,
+                        subject="Relatório mensal - Pioneiro Pro",
+                        title="Compartilhar relatório mensal",
+                    ),
+                ),
+            ],
+        )
+    )
+
     return ft.ListView(
         expand=True,
-        padding=16,
+        padding=18,
         spacing=16,
         controls=[
-            ft.Text("Relatórios", size=26, weight=ft.FontWeight.BOLD),
-            ft.Text(
-                "Acompanhe seu progresso e mantenha seus registros organizados.",
-                color=ft.Colors.GREY_600,
+            page_header(
+                "Relatórios",
+                "Acompanhe progresso, publicações e histórico.",
+                ft.Icons.INSIGHTS_OUTLINED,
             ),
-            ft.Container(
-                padding=16,
-                border_radius=18,
-                bgcolor=ft.Colors.SURFACE,
-                content=ft.Column(
-                    spacing=8,
-                    controls=[
-                        ft.Text("Relatório mensal", size=18, weight=ft.FontWeight.BOLD),
-                        ft.Text(relatorio_mensal, size=13),
-                        ft.Button(
-                            "Compartilhar",
-                            icon=ft.Icons.SHARE,
-                            action=ft.ShareText(
-                                relatorio_mensal,
-                                subject="Relatório mensal - Pioneiro Pro",
-                                title="Compartilhar relatório mensal",
-                            ),
-                        ),
-                    ],
-                ),
-            ),
-            ft.Container(
-                padding=18,
-                border_radius=18,
-                bgcolor=ft.Colors.WHITE,
-                content=ft.Column(
-                    spacing=8,
-                    controls=[
-                        ft.Text("Meta do mês", weight=ft.FontWeight.BOLD),
-                        ft.Text(
-                            f"{formatar_minutos(total_mes)} de {formatar_minutos(meta_mes_min)}",
-                            size=24,
-                            weight=ft.FontWeight.BOLD,
-                            color=ft.Colors.BLUE_700,
-                        ),
-                        ft.ProgressBar(value=_progresso(total_mes, meta_mes_min)),
-                        ft.Text(f"{quantidade} atividade(s) neste mês", size=12),
-                        ft.Text(
-                            f"Brochuras: {publicacoes_mes['brochuras']} • "
-                            f"Folhetos: {publicacoes_mes['folhetos']} • "
-                            f"Outras: {publicacoes_mes['outras_publicacoes']}",
-                            size=12,
-                        ),
-                    ],
-                ),
-            ),
-            ft.Container(
-                padding=18,
-                border_radius=18,
-                bgcolor=ft.Colors.WHITE,
-                content=ft.Column(
-                    spacing=8,
-                    controls=[
-                        ft.Text("Meta do ano", weight=ft.FontWeight.BOLD),
-                        ft.Text(
-                            f"{formatar_minutos(total_ano)} de {formatar_minutos(meta_ano_min)}",
-                            size=24,
-                            weight=ft.FontWeight.BOLD,
-                            color=ft.Colors.BLUE_700,
-                        ),
-                        ft.ProgressBar(value=_progresso(total_ano, meta_ano_min)),
-                    ],
-                ),
-            ),
-            ft.Text(f"Progresso mensal • {hoje.year}", size=18, weight=ft.FontWeight.BOLD),
-            ft.Container(
-                padding=14,
-                border_radius=18,
-                bgcolor=ft.Colors.WHITE,
-                content=ft.Column(spacing=8, controls=barras),
-            ),
-            editor,
-            confirmacao,
-            ft.Text("Histórico de atividades", size=18, weight=ft.FontWeight.BOLD),
-            ft.Text(
-                "Use o ícone de lápis para corrigir o tempo ou as publicações de um registro já salvo.",
-                size=12,
-                color=ft.Colors.GREY_600,
+            hero,
+            ft.Row(
+                spacing=10,
+                controls=[
+                    metric_card(
+                        "Registros",
+                        str(quantidade),
+                        ft.Icons.CHECKLIST_OUTLINED,
+                    ),
+                    metric_card(
+                        "Ano",
+                        formatar_minutos(total_ano),
+                        ft.Icons.CALENDAR_TODAY_OUTLINED,
+                        color=ft.Colors.PURPLE_500,
+                        helper=f"{round(progresso_ano * 100)}% da meta",
+                    ),
+                ],
             ),
             ft.Row(
+                spacing=10,
+                controls=[
+                    metric_card(
+                        "Brochuras",
+                        str(publicacoes_mes["brochuras"]),
+                        ft.Icons.MENU_BOOK_OUTLINED,
+                        color=SUCCESS,
+                    ),
+                    metric_card(
+                        "Folhetos",
+                        str(publicacoes_mes["folhetos"]),
+                        ft.Icons.DESCRIPTION_OUTLINED,
+                        color=WARNING,
+                    ),
+                ],
+            ),
+            share_card,
+            section_header(
+                f"Progresso mensal • {hoje.year}",
+                subtitle="Comparação visual mês a mês.",
+            ),
+            panel(ft.Column(spacing=9, controls=barras), padding=15),
+            editor,
+            confirmacao,
+            section_header(
+                "Histórico de atividades",
+                subtitle="Busque, edite ou exclua qualquer registro salvo.",
+            ),
+            ft.Row(
+                vertical_alignment=ft.CrossAxisAlignment.START,
                 controls=[
                     ft.Container(expand=True, content=busca),
                     filtro_tipo,
                 ]
             ),
             lista_atividades,
+            ft.Container(height=6),
         ],
     )
