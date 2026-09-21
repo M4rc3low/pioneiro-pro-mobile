@@ -4,7 +4,7 @@ Aplicativo mobile do Pioneiro Pro desenvolvido em Python com Flet, com arquitetu
 
 ## Versão atual
 
-**0.5.0**
+**0.5.1**
 
 ## O que já funciona
 
