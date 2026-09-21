@@ -337,6 +337,7 @@ class PioneiroProApp:
                 self.configuracoes,
                 self.backup,
                 self.exportacao,
+                self.geolocator,
                 self._dados_restaurados,
             )
         else:
