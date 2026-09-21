@@ -29,6 +29,7 @@ def estudante_detalhes_view(
     geolocator,
     on_back,
     on_deleted,
+    on_geofence_changed=lambda: None,
 ) -> ft.Control:
     estudante = estudantes.obter(estudante_id)
     if not estudante:
@@ -151,6 +152,7 @@ def estudante_detalhes_view(
                 "alerta_proximidade": 1 if alerta_proximidade.value else 0,
             },
         )
+        on_geofence_changed()
         mensagem.value = "Perfil atualizado."
         mensagem.color = SUCCESS
         mensagem.update()
@@ -193,6 +195,7 @@ def estudante_detalhes_view(
         localizacao_status.color = SUCCESS
         alerta_proximidade.update()
         localizacao_status.update()
+        on_geofence_changed()
         mensagem.value = "Localização salva com sucesso."
         mensagem.color = SUCCESS
         mensagem.update()
@@ -207,6 +210,7 @@ def estudante_detalhes_view(
 
     def excluir(_):
         estudantes.excluir(estudante_id)
+        on_geofence_changed()
         on_deleted()
 
     historico = visitas.listar_por_estudante(estudante_id)
