@@ -19,7 +19,7 @@ Aplicativo mobile do Pioneiro Pro desenvolvido em Python com Flet, com arquitetu
 - histórico de estudos e revisitas;
 - agenda com estudos, revisitas, ligações e outros compromissos;
 - conclusão, edição e exclusão de compromissos;
-- lembrete de compromissos ao abrir/retomar o aplicativo;
+- lembretes de compromissos com antecedência configurável ao abrir/retomar o aplicativo;
 - tema claro e escuro;
 - onboarding inicial;
 - backup e restauração em JSON;
@@ -120,8 +120,8 @@ Confirme o bundle ID antes da primeira publicação definitiva nas lojas.
 
 ## Privacidade
 
-A versão atual trabalha de forma local-first. Consulte [docs/PRIVACIDADE.md](docs/PRIVACIDADE.md).
+A versão atual trabalha de forma local-first. Consulte [docs/PRIVACY.md](docs/PRIVACY.md).
 
 ## Publicação
 
-Consulte [docs/PUBLICACAO.md](docs/PUBLICACAO.md) para os passos de Google Play e App Store.
+Consulte [docs/PUBLISHING.md](docs/PUBLISHING.md) para os passos de Google Play e App Store.
