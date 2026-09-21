@@ -4,12 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pioneiro_pro_mobile"
-version = "0.3.0"
+version = "0.4.0"
 description = "Aplicativo mobile Pioneiro Pro para Android e iOS"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "flet==1.0.0"
+    "flet==1.0.0",
+    "flet-geolocator",
 ]
 
 [tool.setuptools]
@@ -54,3 +55,16 @@ min_sdk_version = 24
 color = "#F5F7FB"
 dark_color = "#0F172A"
 icon_background = "#FFFFFF"
+
+[tool.flet.android.permission]
+"android.permission.ACCESS_FINE_LOCATION" = true
+"android.permission.ACCESS_COARSE_LOCATION" = true
+"android.permission.ACCESS_BACKGROUND_LOCATION" = true
+"android.permission.FOREGROUND_SERVICE" = true
+"android.permission.FOREGROUND_SERVICE_LOCATION" = true
+
+[tool.flet.ios.info]
+NSLocationWhenInUseUsageDescription = "O Pioneiro Pro usa sua localização para avisar quando você estiver perto de uma visita ou estudante cadastrado."
+NSLocationAlwaysAndWhenInUseUsageDescription = "O Pioneiro Pro pode usar sua localização em segundo plano para identificar visitas próximas."
+NSLocationAlwaysUsageDescription = "O Pioneiro Pro pode usar sua localização em segundo plano para identificar visitas próximas."
+UIBackgroundModes = ["location"]
