@@ -36,6 +36,17 @@ def agenda_view(
         min_lines=2,
         max_lines=4,
     )
+    lembrete = ft.Dropdown(
+        label="Lembrar antes",
+        value="30",
+        options=[
+            ft.DropdownOption(key="0", text="No horário"),
+            ft.DropdownOption(key="10", text="10 minutos antes"),
+            ft.DropdownOption(key="30", text="30 minutos antes"),
+            ft.DropdownOption(key="60", text="1 hora antes"),
+            ft.DropdownOption(key="1440", text="1 dia antes"),
+        ],
+    )
     mensagem = ft.Text(size=13)
     lista = ft.Column(spacing=8)
     titulo_form = ft.Text("Novo compromisso", size=18, weight=ft.FontWeight.BOLD)
@@ -48,9 +59,10 @@ def agenda_view(
         horario.value = ""
         tipo.value = "estudo"
         observacao.value = ""
+        lembrete.value = "30"
         titulo_form.value = "Novo compromisso"
         botao_salvar.text = "Adicionar à agenda"
-        for control in [estudante, data, horario, tipo, observacao, titulo_form, botao_salvar]:
+        for control in [estudante, data, horario, tipo, observacao, lembrete, titulo_form, botao_salvar]:
             control.update()
 
     def carregar() -> None:
@@ -80,6 +92,7 @@ def agenda_view(
                 horario.value = visita["horario"]
                 tipo.value = visita["tipo"]
                 observacao.value = visita["observacao"]
+                lembrete.value = str(visita.get("lembrar_minutos_antes") or 30)
                 titulo_form.value = "Editar compromisso"
                 botao_salvar.text = "Salvar alterações"
                 for control in [
@@ -88,6 +101,7 @@ def agenda_view(
                     horario,
                     tipo,
                     observacao,
+                    lembrete,
                     titulo_form,
                     botao_salvar,
                 ]:
@@ -173,6 +187,7 @@ def agenda_view(
                 horario=(horario.value or "").strip(),
                 tipo=tipo.value or "estudo",
                 observacao=observacao.value or "",
+                lembrar_minutos_antes=int(lembrete.value or 30),
             )
             mensagem.value = "Compromisso adicionado."
         else:
@@ -183,6 +198,7 @@ def agenda_view(
                 horario=(horario.value or "").strip(),
                 tipo=tipo.value or "estudo",
                 observacao=observacao.value or "",
+                lembrar_minutos_antes=int(lembrete.value or 30),
             )
             mensagem.value = "Compromisso atualizado."
 
@@ -221,6 +237,7 @@ def agenda_view(
                             ]
                         ),
                         tipo,
+                        lembrete,
                         observacao,
                         mensagem,
                         ft.Row(
