@@ -13,6 +13,7 @@ class ConfiguracaoRepository:
         "onboarding_concluido": "0",
         "proximidade_ativa": "0",
         "raio_proximidade_padrao": "200",
+        "bloqueio_local": "0",
     }
 
     def __init__(self, database: Database) -> None:
