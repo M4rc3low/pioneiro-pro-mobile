@@ -25,6 +25,10 @@ __all__ = [
     "normalize_permission_status",
     "ProximidadeService",
     "LocalSecurityService",
+    "NativeGeofenceError",
+    "NativeGeofencingService",
 ]
 
 from .security_service import LocalSecurityService
+
+from .native_geofencing_service import NativeGeofenceError, NativeGeofencingService
