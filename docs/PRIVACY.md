@@ -4,11 +4,11 @@
 
 ## Visão geral
 
-O Pioneiro Pro foi projetado para organizar registros pessoais de atividades, estudantes, agenda, metas e configurações.
+O Pioneiro Pro foi projetado para organizar registros pessoais de atividades, estudantes, agenda, metas e configurações com uma abordagem local-first.
 
 ## Dados armazenados
 
-A versão atual armazena localmente no dispositivo informações que o próprio usuário registra, como:
+A versão atual pode armazenar localmente no dispositivo informações que o próprio usuário registra, como:
 
 - nome e congregação configurados pelo usuário;
 - registros de atividades e tempo;
@@ -16,42 +16,56 @@ A versão atual armazena localmente no dispositivo informações que o próprio 
 - compromissos de agenda e revisitas;
 - metas e preferências do aplicativo;
 - quantidades de publicações registradas;
-- coordenadas de locais salvos voluntariamente para alertas de proximidade.
+- coordenadas salvas voluntariamente para alertas de proximidade.
 
-## Armazenamento
+## Armazenamento e transmissão
 
-Os dados são mantidos localmente em banco SQLite no dispositivo. O aplicativo não envia automaticamente esses dados para um servidor externo na versão atual.
+Os dados ficam no banco SQLite privado do aplicativo. A versão atual não sincroniza automaticamente esses dados com um servidor do Pioneiro Pro, não possui publicidade e não usa rastreamento de terceiros para fins publicitários.
 
 ## Localização
 
-O recurso de proximidade é opcional. Quando ativado, o aplicativo usa a localização do aparelho para comparar sua posição com coordenadas que o próprio usuário salvou em estudantes ou revisitas.
+O recurso de proximidade é opcional e começa desativado em novas instalações. Antes de ativá-lo, o aplicativo explica o uso da localização e solicita a decisão do usuário.
 
-No Android, o recurso pode solicitar permissão de localização em segundo plano para continuar a comparação quando o aplicativo não estiver em primeiro plano. No iOS, permissões equivalentes podem ser solicitadas conforme as regras do sistema.
+Quando ativado, o Pioneiro Pro compara a localização do aparelho com coordenadas de estudantes ou revisitas que o próprio usuário cadastrou. Essa comparação é feita no dispositivo.
 
-As coordenadas salvas permanecem no banco local do Pioneiro Pro. A versão atual não envia a localização do usuário ou dos estudantes para um servidor externo.
+No Android, o usuário pode permitir localização em segundo plano. Quando o processo do aplicativo continua ativo em segundo plano, um alerta de proximidade pode ser apresentado como notificação nativa. No iOS, o sistema aplica suas próprias regras para atualizações de localização em segundo plano.
+
+O sistema operacional pode suspender ou encerrar completamente o aplicativo. Por isso, o Pioneiro Pro não garante monitoramento contínuo depois que o processo é totalmente encerrado.
+
+As coordenadas salvas e a posição usada para comparação não são enviadas automaticamente a um servidor do Pioneiro Pro.
+
+## Proteção do aplicativo
+
+O usuário pode ativar um bloqueio local opcional. Quando habilitado, o Pioneiro Pro utiliza a autenticação fornecida pelo próprio sistema operacional, como biometria, PIN, senha ou padrão do aparelho.
+
+O Pioneiro Pro não armazena a senha, PIN ou dados biométricos usados pelo sistema operacional.
 
 ## Backup e exportação
 
-O usuário pode gerar manualmente:
+O aplicativo oferece:
 
-- backup em JSON;
+- backup protegido por senha no formato `.ppbackup`;
+- restauração de backups protegidos;
+- compatibilidade com backup JSON antigo sem senha;
 - relatório em CSV;
 - resumo em TXT.
 
-Ao compartilhar ou armazenar esses arquivos fora do dispositivo, o usuário passa a ser responsável pelo local escolhido e por quem terá acesso a eles.
+O backup protegido deriva uma chave a partir da senha escolhida pelo usuário e usa criptografia autenticada. A senha não é armazenada nem pode ser recuperada pelo Pioneiro Pro.
+
+O backup JSON sem senha e as exportações CSV/TXT podem conter informações legíveis. O usuário deve protegê-los depois que forem salvos ou compartilhados fora do aplicativo.
 
 ## Permissões
 
-O aplicativo solicita apenas permissões necessárias às funções habilitadas. Recursos futuros que exijam novas permissões deverão ser documentados antes da publicação.
+O aplicativo solicita permissões conforme os recursos habilitados, incluindo localização, localização em segundo plano quando escolhida pelo usuário, notificações no Android e autenticação local quando o bloqueio é ativado.
 
 ## Exclusão dos dados
 
-Os registros podem ser excluídos dentro do próprio aplicativo. A remoção do aplicativo também remove os dados locais conforme o comportamento do sistema operacional.
+Os registros podem ser excluídos dentro do aplicativo. A remoção do aplicativo também remove os dados locais conforme o comportamento do sistema operacional, salvo arquivos que o próprio usuário exportou para outro local.
 
 ## Sincronização em nuvem
 
-A versão atual não possui sincronização automática em nuvem. Caso esse recurso seja adicionado, esta política deverá ser atualizada antes de sua ativação pública.
+A versão atual não possui sincronização automática em nuvem. Caso esse comportamento mude, esta política deverá ser atualizada antes da ativação pública do novo recurso.
 
 ## Contato
 
-Para suporte e questões de privacidade, consulte [SUPPORT.md](SUPPORT.md). Não publique dados pessoais em chamados públicos.
+Para suporte e questões de privacidade, consulte [SUPPORT.md](SUPPORT.md). Não publique nomes, telefones, endereços, coordenadas ou arquivos de backup em chamados públicos.
