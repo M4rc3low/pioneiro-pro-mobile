@@ -39,7 +39,7 @@ jobs:
       - name: Configurar Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.44.8"
+          flutter-version: "3.47.5"
           channel: stable
           cache: true
 
@@ -69,8 +69,53 @@ jobs:
       - name: Aplicar suporte a notificações Android
         run: flet-android-notifications-patch --project-root build/flutter
 
-      - name: Recompilar Android após o patch
-        run: flet build ${{ matrix.target }} --no-rich-output --yes
+      - name: Integrar geofencing nativo
+        run: python scripts/patch_native_geofencing.py build/flutter
+
+      - name: Validar dependências Flutter
+        working-directory: build/flutter
+        run: flutter pub get
+
+      - name: Analisar extensão nativa
+        working-directory: native/pioneiro_pro_geofencing
+        run: dart analyze
+
+      - name: Recompilar Android com runtime Python
+        shell: bash
+        working-directory: build/flutter
+        env:
+          SERIOUS_PYTHON_SITE_PACKAGES: ${{ github.workspace }}/build/site-packages
+        run: |
+          APP_VERSION="$(python - <<'PY'
+          import tomllib
+          with open("../../pyproject.toml", "rb") as f:
+              print(tomllib.load(f)["project"]["version"])
+          PY
+          )"
+
+          if [ "${{ matrix.target }}" = "apk" ]; then
+            flutter build apk --release \
+              --build-name "$APP_VERSION" \
+              --build-number "${{ github.run_number }}"
+          else
+            flutter build appbundle --release \
+              --build-name "$APP_VERSION" \
+              --build-number "${{ github.run_number }}"
+          fi
+
+      - name: Preparar artefato Android
+        shell: bash
+        run: |
+          rm -rf "build/${{ matrix.target }}"
+          mkdir -p "build/${{ matrix.target }}"
+
+          if [ "${{ matrix.target }}" = "apk" ]; then
+            cp build/flutter/build/app/outputs/flutter-apk/app-release.apk \
+              "build/apk/Pioneiro-Pro.apk"
+          else
+            cp build/flutter/build/app/outputs/bundle/release/app-release.aab \
+              "build/aab/Pioneiro-Pro.aab"
+          fi
 
       - name: Publicar artefato
         uses: actions/upload-artifact@v7
