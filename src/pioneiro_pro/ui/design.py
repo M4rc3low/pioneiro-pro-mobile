@@ -27,10 +27,25 @@ def brand_gradient() -> ft.LinearGradient:
 
 def soft_shadow() -> ft.BoxShadow:
     return ft.BoxShadow(
-        blur_radius=18,
+        blur_radius=12,
         spread_radius=0,
-        color=ft.Colors.with_opacity(0.08, ft.Colors.BLACK),
-        offset=ft.Offset(0, 5),
+        color=ft.Colors.with_opacity(0.05, ft.Colors.BLACK),
+        offset=ft.Offset(0, 3),
+    )
+
+
+def app_logo(size: int = 44, radius: int = 14) -> ft.Container:
+    return ft.Container(
+        width=size,
+        height=size,
+        border_radius=radius,
+        clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+        content=ft.Image(
+            src="icon.png",
+            width=size,
+            height=size,
+            fit=ft.BoxFit.COVER,
+        ),
     )
 
 
@@ -39,12 +54,12 @@ def icon_badge(
     *,
     color: str = ACCENT,
     size: int = 20,
-    box_size: int = 42,
+    box_size: int = 40,
 ) -> ft.Container:
     return ft.Container(
         width=box_size,
         height=box_size,
-        border_radius=14,
+        border_radius=13,
         bgcolor=ft.Colors.with_opacity(0.10, color),
         alignment=ft.Alignment.CENTER,
         content=ft.Icon(icon, color=color, size=size),
@@ -54,11 +69,11 @@ def icon_badge(
 def panel(
     content: ft.Control,
     *,
-    padding: int = 18,
-    radius: int = 22,
+    padding: int = 16,
+    radius: int = 20,
     expand: bool | int | None = None,
     bgcolor: str | None = None,
-    elevated: bool = True,
+    elevated: bool = False,
 ) -> ft.Container:
     return ft.Container(
         expand=expand,
@@ -82,7 +97,7 @@ def page_header(
     trailing: ft.Control | None = None,
 ) -> ft.Control:
     controls: list[ft.Control] = [
-        icon_badge(icon, box_size=50, size=24),
+        icon_badge(icon, box_size=44, size=22),
         ft.Container(
             expand=True,
             content=ft.Column(
@@ -90,13 +105,13 @@ def page_header(
                 controls=[
                     ft.Text(
                         title,
-                        size=27,
+                        size=24,
                         weight=ft.FontWeight.BOLD,
                         color=ft.Colors.ON_SURFACE,
                     ),
                     ft.Text(
                         subtitle,
-                        size=13,
+                        size=12,
                         color=MUTED,
                     ),
                 ],
@@ -169,7 +184,7 @@ def metric_card(
         ft.Text(label, size=12, color=MUTED),
         ft.Text(
             value,
-            size=25,
+            size=23,
             weight=ft.FontWeight.BOLD,
             color=ft.Colors.ON_SURFACE,
         ),
@@ -179,8 +194,8 @@ def metric_card(
 
     return panel(
         ft.Column(spacing=8, controls=controls),
-        padding=16,
-        radius=20,
+        padding=14,
+        radius=18,
         expand=True,
     )
 
