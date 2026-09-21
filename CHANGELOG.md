@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.1 — 2026-09-21
+
+### Identidade visual
+- novo ícone oficial do aplicativo com relógio, sol, nuvem e chuva;
+- correção do nome do arquivo de ícone para `src/assets/icon.png`;
+- preparação de nova release para Android e iOS com o novo ícone.
+
+
 ## 0.5.0 — 2026-09-21
 
 ### Interface
