@@ -1,0 +1,16 @@
+name: pioneiro_pro_geofencing
+description: Native geofencing bridge for Pioneiro Pro
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.13.0 <4.0.0"
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flet: ^1.0.0
+  geofencing_service: 2.1.0
+  flutter_local_notifications: ^22.1.0
+  shared_preferences: ^2.5.3
