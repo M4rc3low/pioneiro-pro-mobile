@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sqlite3
 from pathlib import Path
 
@@ -7,7 +8,8 @@ from pathlib import Path
 class Database:
     def __init__(self, path: str | Path | None = None) -> None:
         if path is None:
-            data_dir = Path.home() / ".pioneiro_pro"
+            app_data = os.getenv("FLET_APP_STORAGE_DATA")
+            data_dir = Path(app_data) if app_data else Path.cwd() / ".pioneiro_pro"
             data_dir.mkdir(parents=True, exist_ok=True)
             path = data_dir / "pioneiro_pro.db"
 
