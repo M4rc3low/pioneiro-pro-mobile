@@ -98,6 +98,17 @@ def test_localizacao_do_estudante_e_proximidade(tmp_path):
     assert len(alertas) == 1
     assert alertas[0]["nome"] == "Maria"
     assert alertas[0]["distancia_m"] < 250
+    assert alertas[0]["latitude"] == -23.588
+    assert alertas[0]["longitude"] == -46.681
+
+    url = service.url_google_maps(
+        alertas[0]["latitude"],
+        alertas[0]["longitude"],
+    )
+    assert url.startswith("https://www.google.com/maps/dir/?api=1")
+    assert "destination=-23.5880000%2C-46.6810000" in url
+    assert "travelmode=driving" in url
+    assert "dir_action=navigate" in url
 
 
 def test_proximidade_nao_repete_imediatamente(tmp_path):
@@ -148,3 +159,5 @@ def test_revisita_pode_ter_localizacao_propria(tmp_path):
 
     assert len(alertas) == 1
     assert alertas[0]["tipo"] == "revisita"
+    assert alertas[0]["latitude"] == -23.588
+    assert alertas[0]["longitude"] == -46.681
