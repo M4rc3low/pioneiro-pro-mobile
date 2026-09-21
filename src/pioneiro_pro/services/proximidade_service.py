@@ -57,6 +57,47 @@ class ProximidadeService:
         """Allow an alert to be retried when delivery failed."""
         self._ultimos_alertas.pop(chave, None)
 
+    def regioes_geofence(self) -> list[dict]:
+        """Return normalized native geofence regions for active alerts."""
+        regioes: list[dict] = []
+        estudantes_com_revisita: set[int] = set()
+
+        for visita in self.visitas.listar_para_proximidade():
+            estudante_id = visita.get("estudante_id")
+            if estudante_id is not None:
+                estudantes_com_revisita.add(int(estudante_id))
+
+            regioes.append(
+                {
+                    "id": f'visita:{int(visita["id"])}',
+                    "tipo": "revisita",
+                    "nome": visita.get("estudante_nome") or "Revisita",
+                    "titulo": "Revisita próxima",
+                    "latitude": float(visita["latitude"]),
+                    "longitude": float(visita["longitude"]),
+                    "raio_m": max(100, int(visita.get("raio_alerta_m") or 200)),
+                }
+            )
+
+        for estudante in self.estudantes.listar_com_localizacao():
+            estudante_id = int(estudante["id"])
+            if estudante_id in estudantes_com_revisita:
+                continue
+
+            regioes.append(
+                {
+                    "id": f"estudante:{estudante_id}",
+                    "tipo": "estudante",
+                    "nome": estudante["nome"],
+                    "titulo": "Estudante próximo",
+                    "latitude": float(estudante["latitude"]),
+                    "longitude": float(estudante["longitude"]),
+                    "raio_m": max(100, int(estudante.get("raio_alerta_m") or 200)),
+                }
+            )
+
+        return regioes
+
     def verificar(
         self,
         latitude: float,
