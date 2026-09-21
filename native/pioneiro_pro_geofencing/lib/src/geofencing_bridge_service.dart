@@ -121,7 +121,20 @@ class PioneiroProGeofencingService extends FletService {
 
         case 'request_permissions':
           await _ensureInitialized();
-          return (await FlutterGeofencePlugin.requestPermissions()).toString();
+          final locationGranted =
+              await FlutterGeofencePlugin.requestPermissions();
+
+          const notificationSettings = InitializationSettings(
+            android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+          );
+          final notifications = FlutterLocalNotificationsPlugin();
+          await notifications.initialize(settings: notificationSettings);
+          final android = notifications.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+          final notificationGranted =
+              await android?.requestNotificationsPermission() ?? false;
+
+          return (locationGranted && notificationGranted).toString();
 
         case 'registered_ids':
           await _ensureInitialized();
