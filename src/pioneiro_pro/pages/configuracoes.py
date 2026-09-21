@@ -33,6 +33,21 @@ def configuracoes_view(
         value=config["meta_horas_ano"],
         keyboard_type=ft.KeyboardType.NUMBER,
     )
+    proximidade_ativa = ft.Switch(
+        label="Avisos por proximidade",
+        value=config.get("proximidade_ativa", "1") == "1",
+    )
+    raio_padrao = ft.Dropdown(
+        label="Raio padrão para novos locais",
+        value=config.get("raio_proximidade_padrao", "200"),
+        options=[
+            ft.DropdownOption(key="100", text="100 m"),
+            ft.DropdownOption(key="200", text="200 m"),
+            ft.DropdownOption(key="300", text="300 m"),
+            ft.DropdownOption(key="500", text="500 m"),
+            ft.DropdownOption(key="1000", text="1 km"),
+        ],
+    )
     tema_escuro = ft.Switch(
         label="Tema escuro",
         value=config["tema"] == "escuro",
@@ -56,6 +71,14 @@ def configuracoes_view(
         configuracoes.definir("congregacao", (congregacao.value or "").strip())
         configuracoes.definir("meta_horas_mes", mensal)
         configuracoes.definir("meta_horas_ano", anual)
+        configuracoes.definir(
+            "proximidade_ativa",
+            "1" if proximidade_ativa.value else "0",
+        )
+        configuracoes.definir(
+            "raio_proximidade_padrao",
+            raio_padrao.value or "200",
+        )
         configuracoes.definir(
             "tema",
             "escuro" if tema_escuro.value else "claro",
@@ -176,6 +199,24 @@ def configuracoes_view(
                 border_radius=18,
                 bgcolor=ft.Colors.SURFACE,
                 content=ft.Column(
+                    spacing=10,
+                    controls=[
+                        ft.Text("Proximidade", size=18, weight=ft.FontWeight.BOLD),
+                        ft.Text(
+                            "O GPS é usado apenas para comparar sua posição com locais que você salvou no próprio aparelho.",
+                            size=12,
+                            color=ft.Colors.GREY_600,
+                        ),
+                        proximidade_ativa,
+                        raio_padrao,
+                    ],
+                ),
+            ),
+            ft.Container(
+                padding=16,
+                border_radius=18,
+                bgcolor=ft.Colors.SURFACE,
+                content=ft.Column(
                     controls=[
                         ft.Text("Aparência", size=18, weight=ft.FontWeight.BOLD),
                         tema_escuro,
@@ -220,7 +261,7 @@ def configuracoes_view(
             ft.ListTile(
                 leading=ft.Icon(ft.Icons.INFO_OUTLINE),
                 title=ft.Text("Pioneiro Pro"),
-                subtitle=ft.Text("Versão 0.3.0 • Python + Flet"),
+                subtitle=ft.Text("Versão 0.4.0 • Python + Flet"),
             ),
         ],
     )
