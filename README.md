@@ -17,9 +17,12 @@ Aplicativo mobile local-first para organização pessoal de atividades, horas, e
 - agenda para estudos, revisitas, ligações e outros compromissos;
 - localização opcional de estudantes e revisitas;
 - alertas de proximidade com raio configurável e controle de repetição;
+- ativação explícita da proximidade com tratamento de permissões e orientação de segundo plano;
+- notificação nativa Android quando o app está em segundo plano e o processo continua ativo;
 - registro de brochuras, folhetos e outras publicações;
 - compartilhamento do relatório mensal pelo menu nativo do Android/iOS;
-- backup e restauração em JSON;
+- backup protegido por senha com criptografia autenticada e compatibilidade com o JSON antigo;
+- bloqueio opcional por biometria, PIN, senha ou padrão do próprio aparelho;
 - exportação em CSV e TXT;
 - tema claro/escuro e onboarding;
 - armazenamento local em SQLite, sem sincronização automática com servidor externo;
@@ -63,6 +66,9 @@ A separação entre interface, regras de negócio, acesso a dados e serviços fa
 - **Python 3.10+**
 - **Flet 1.0**
 - **flet-geolocator**
+- **flet-local-auth**
+- **flet-android-notifications** no Android
+- **cryptography / AES-GCM** para backups protegidos
 - **SQLite**
 - **Pytest**
 - **Ruff**
@@ -149,7 +155,9 @@ A geração e assinatura final de um IPA distribuível exigem ambiente Apple e c
 
 O Pioneiro Pro adota uma abordagem **local-first**. Os dados cadastrados ficam no dispositivo e a versão atual não os envia automaticamente para um servidor externo.
 
-O recurso de localização é opcional e é usado para comparar a posição do aparelho com coordenadas salvas pelo próprio usuário.
+O recurso de localização é opcional, começa desativado em novas instalações e é usado para comparar a posição do aparelho com coordenadas salvas pelo próprio usuário. No Android, quando o processo do aplicativo continua ativo em segundo plano, os avisos podem ser entregues como notificações nativas. O sistema operacional ainda pode encerrar o processo, portanto o projeto não promete monitoramento com o app totalmente morto.
+
+O aplicativo também oferece bloqueio local opcional usando a autenticação já configurada no aparelho e backup protegido por senha. A senha do backup não é armazenada pelo Pioneiro Pro.
 
 Consulte [docs/PRIVACY.md](docs/PRIVACY.md) para os detalhes.
 
@@ -169,4 +177,4 @@ Consulte [docs/PRIVACY.md](docs/PRIVACY.md) para os detalhes.
 
 ## Status
 
-A versão **0.5.2** possui CI validada e pipeline de release/build mobile. A publicação definitiva em Google Play e App Store ainda depende de contas, assinaturas e credenciais das respectivas lojas.
+O branch `main` está preparando a **0.5.2**, com CI automatizada e pipeline de build/release. A última release publicada no GitHub é a **0.5.1**. A publicação definitiva em Google Play e App Store ainda depende de contas, assinaturas e credenciais das respectivas lojas.
