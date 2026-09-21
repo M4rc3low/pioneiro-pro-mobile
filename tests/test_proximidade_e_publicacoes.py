@@ -194,3 +194,39 @@ def test_ids_de_notificacao_sao_estaveis_por_tipo():
     assert estudante == 10042
     assert revisita == 20042
     assert estudante != revisita
+
+
+def test_regioes_geofence_refletem_estudantes_e_revisitas(tmp_path):
+    db = criar_db(tmp_path)
+    estudantes = EstudanteRepository(db)
+    visitas = VisitaRepository(db)
+
+    maria_id = estudantes.criar("Maria")
+    estudantes.atualizar_localizacao(maria_id, -23.588, -46.681, 80)
+
+    joao_id = estudantes.criar("João")
+    estudantes.atualizar_localizacao(joao_id, -23.590, -46.680, 300)
+    visitas.criar(
+        data="2099-09-22",
+        horario="18:00",
+        tipo="revisita",
+        estudante_id=joao_id,
+        latitude=-23.591,
+        longitude=-46.679,
+        raio_alerta_m=250,
+    )
+
+    regioes = ProximidadeService(estudantes, visitas).regioes_geofence()
+    por_id = {item["id"]: item for item in regioes}
+
+    assert f"estudante:{maria_id}" in por_id
+    assert por_id[f"estudante:{maria_id}"]["raio_m"] == 100
+
+    revisitas = [item for item in regioes if item["tipo"] == "revisita"]
+    assert len(revisitas) == 1
+    assert revisitas[0]["nome"] == "João"
+    assert revisitas[0]["raio_m"] == 250
+
+    # Quando há revisita com localização própria, evitamos uma segunda
+    # geofence redundante para o mesmo estudante.
+    assert f"estudante:{joao_id}" not in por_id
