@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pioneiro_pro_mobile"
-version = "0.2.0"
+version = "0.3.0"
 description = "Aplicativo mobile Pioneiro Pro para Android e iOS"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -41,3 +41,16 @@ pythonpath = ["src"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+
+
+[tool.flet.splash]
+color = "#F5F7FB"
+dark_color = "#0F172A"
+
+[tool.flet.android]
+min_sdk_version = 24
+
+[tool.flet.android.splash]
+color = "#F5F7FB"
+dark_color = "#0F172A"
+icon_background = "#FFFFFF"
