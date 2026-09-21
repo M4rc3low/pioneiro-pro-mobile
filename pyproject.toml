@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pioneiro_pro_mobile"
-version = "0.5.0"
+version = "0.5.1"
 description = "Aplicativo mobile Pioneiro Pro para Android e iOS"
 readme = "README.md"
 requires-python = ">=3.10"
