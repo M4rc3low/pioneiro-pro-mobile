@@ -5,6 +5,17 @@ import flet as ft
 
 from pioneiro_pro.repositories import AtividadeRepository
 from pioneiro_pro.services import CronometroService
+from pioneiro_pro.ui import (
+    ACCENT,
+    DANGER,
+    SUCCESS,
+    WARNING,
+    icon_badge,
+    page_header,
+    panel,
+    section_header,
+    status_pill,
+)
 
 
 def registrar_view(
@@ -56,53 +67,52 @@ def registrar_view(
         min_lines=2,
         max_lines=4,
     )
-    mensagem = ft.Text(size=13)
+    mensagem = ft.Text(size=12)
+
     cronometro_texto = ft.Text(
         cronometro.texto(),
-        size=38,
+        size=42,
         weight=ft.FontWeight.BOLD,
         text_align=ft.TextAlign.CENTER,
+        color=ft.Colors.WHITE,
     )
-    status = ft.Text(
+    status_texto = ft.Text(
         "Em andamento" if cronometro.rodando else "Pronto para iniciar",
-        size=12,
-        color=ft.Colors.GREEN_700 if cronometro.rodando else ft.Colors.GREY_600,
+        size=11,
+        weight=ft.FontWeight.BOLD,
+        color=ft.Colors.WHITE,
     )
 
     async def atualizar_cronometro() -> None:
         while cronometro.rodando and is_visible():
             cronometro_texto.value = cronometro.texto()
-            status.value = "Em andamento"
-            status.color = ft.Colors.GREEN_700
+            status_texto.value = "Em andamento"
             try:
                 cronometro_texto.update()
-                status.update()
+                status_texto.update()
             except Exception:
                 return
             await asyncio.sleep(1)
 
     def iniciar(_):
         cronometro.iniciar()
-        status.value = "Em andamento"
-        status.color = ft.Colors.GREEN_700
-        status.update()
+        status_texto.value = "Em andamento"
+        status_texto.update()
         page.run_task(atualizar_cronometro)
 
     def pausar(_):
         cronometro.pausar()
         cronometro_texto.value = cronometro.texto()
-        status.value = "Pausado"
-        status.color = ft.Colors.ORANGE_700
+        status_texto.value = "Pausado"
         cronometro_texto.update()
-        status.update()
+        status_texto.update()
 
     def zerar(_):
         cronometro.zerar()
         cronometro_texto.value = cronometro.texto()
-        status.value = "Pronto para iniciar"
-        status.color = ft.Colors.GREY_600
+        status_texto.value = "Pronto para iniciar"
         cronometro_texto.update()
-        status.update()
+        status_texto.update()
 
     def usar_tempo(_):
         total = cronometro.minutos_para_registro()
@@ -111,7 +121,7 @@ def registrar_view(
         horas.update()
         minutos.update()
         mensagem.value = "Tempo do cronômetro transferido para o registro."
-        mensagem.color = ft.Colors.BLUE_700
+        mensagem.color = ACCENT
         mensagem.update()
 
     def salvar(_):
@@ -123,14 +133,14 @@ def registrar_view(
             qtd_folhetos = max(0, int(folhetos.value or 0))
             qtd_outras = max(0, int(outras_publicacoes.value or 0))
         except ValueError:
-            mensagem.value = "Informe horas e minutos usando apenas números."
-            mensagem.color = ft.Colors.RED
+            mensagem.value = "Use apenas números nos campos de tempo e publicações."
+            mensagem.color = DANGER
             mensagem.update()
             return
 
         if total <= 0:
             mensagem.value = "Informe um tempo maior que zero."
-            mensagem.color = ft.Colors.RED
+            mensagem.color = DANGER
             mensagem.update()
             return
 
@@ -149,93 +159,142 @@ def registrar_view(
     if cronometro.rodando:
         page.run_task(atualizar_cronometro)
 
-    return ft.ListView(
-        expand=True,
-        padding=16,
-        spacing=16,
-        controls=[
-            ft.Text("Registrar atividade", size=26, weight=ft.FontWeight.BOLD),
-            ft.Container(
-                padding=18,
-                border_radius=18,
-                bgcolor=ft.Colors.WHITE,
-                content=ft.Column(
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                    spacing=12,
+    timer_card = ft.Container(
+        padding=22,
+        border_radius=26,
+        bgcolor=ft.Colors.BLUE_700,
+        content=ft.Column(
+            spacing=12,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     controls=[
                         ft.Row(
-                            alignment=ft.MainAxisAlignment.CENTER,
+                            spacing=8,
                             controls=[
                                 ft.Icon(
                                     ft.Icons.TIMER_OUTLINED,
-                                    color=ft.Colors.BLUE_700,
+                                    color=ft.Colors.WHITE,
+                                    size=21,
                                 ),
                                 ft.Text(
                                     "Cronômetro",
-                                    size=18,
+                                    color=ft.Colors.WHITE,
                                     weight=ft.FontWeight.BOLD,
                                 ),
                             ],
                         ),
-                        cronometro_texto,
-                        status,
-                        ft.Row(
-                            alignment=ft.MainAxisAlignment.CENTER,
-                            controls=[
-                                ft.FilledButton(
-                                    "Iniciar",
-                                    icon=ft.Icons.PLAY_ARROW,
-                                    on_click=iniciar,
-                                ),
-                                ft.OutlinedButton(
-                                    "Pausar",
-                                    icon=ft.Icons.PAUSE,
-                                    on_click=pausar,
-                                ),
-                                ft.IconButton(
-                                    icon=ft.Icons.RESTART_ALT,
-                                    tooltip="Zerar",
-                                    on_click=zerar,
-                                ),
-                            ],
+                        status_pill(
+                            "Ativo" if cronometro.rodando else "Manual",
+                            color=SUCCESS if cronometro.rodando else WARNING,
                         ),
-                        ft.TextButton(
-                            "Usar este tempo no registro",
-                            icon=ft.Icons.DOWNLOAD_DONE,
-                            on_click=usar_tempo,
+                    ],
+                ),
+                cronometro_texto,
+                status_texto,
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    controls=[
+                        ft.FilledButton(
+                            "Iniciar",
+                            icon=ft.Icons.PLAY_ARROW,
+                            on_click=iniciar,
+                        ),
+                        ft.OutlinedButton(
+                            "Pausar",
+                            icon=ft.Icons.PAUSE,
+                            on_click=pausar,
+                        ),
+                        ft.IconButton(
+                            icon=ft.Icons.RESTART_ALT,
+                            tooltip="Zerar",
+                            on_click=zerar,
+                        ),
+                    ],
+                ),
+                ft.TextButton(
+                    "Usar este tempo no registro",
+                    icon=ft.Icons.DOWNLOAD_DONE,
+                    on_click=usar_tempo,
+                ),
+            ],
+        ),
+    )
+
+    return ft.ListView(
+        expand=True,
+        padding=18,
+        spacing=16,
+        controls=[
+            page_header(
+                "Registrar atividade",
+                "Use o cronômetro ou informe o tempo manualmente.",
+                ft.Icons.ADD_CIRCLE_OUTLINE,
+            ),
+            timer_card,
+            panel(
+                ft.Column(
+                    spacing=12,
+                    controls=[
+                        section_header(
+                            "Detalhes da atividade",
+                            subtitle="Data, tipo e tempo registrado.",
+                            trailing=icon_badge(ft.Icons.EDIT_CALENDAR_OUTLINED),
+                        ),
+                        data,
+                        tipo,
+                        ft.Row(
+                            spacing=10,
+                            controls=[
+                                ft.Container(expand=True, content=horas),
+                                ft.Container(expand=True, content=minutos),
+                            ],
                         ),
                     ],
                 ),
             ),
-            ft.Text(
-                "Registro manual",
-                size=18,
-                weight=ft.FontWeight.BOLD,
+            panel(
+                ft.Column(
+                    spacing=12,
+                    controls=[
+                        section_header(
+                            "Publicações entregues",
+                            subtitle="Opcional — você pode ajustar depois.",
+                            trailing=icon_badge(
+                                ft.Icons.AUTO_STORIES_OUTLINED,
+                                color=ft.Colors.PURPLE_500,
+                            ),
+                        ),
+                        ft.Row(
+                            spacing=10,
+                            controls=[
+                                ft.Container(expand=True, content=brochuras),
+                                ft.Container(expand=True, content=folhetos),
+                            ],
+                        ),
+                        outras_publicacoes,
+                    ],
+                ),
             ),
-            data,
-            tipo,
-            ft.Row(
-                spacing=10,
-                controls=[
-                    ft.Container(expand=True, content=horas),
-                    ft.Container(expand=True, content=minutos),
-                ],
+            panel(
+                ft.Column(
+                    spacing=10,
+                    controls=[
+                        section_header(
+                            "Observações",
+                            subtitle="Anote algo útil sobre essa atividade.",
+                        ),
+                        observacao,
+                    ],
+                ),
             ),
-            ft.Text("Publicações entregues", size=16, weight=ft.FontWeight.BOLD),
-            ft.Row(
-                spacing=10,
-                controls=[
-                    ft.Container(expand=True, content=brochuras),
-                    ft.Container(expand=True, content=folhetos),
-                ],
-            ),
-            outras_publicacoes,
-            observacao,
             mensagem,
             ft.FilledButton(
                 "Salvar atividade",
                 icon=ft.Icons.SAVE_OUTLINED,
                 on_click=salvar,
             ),
+            ft.Container(height=6),
         ],
     )
