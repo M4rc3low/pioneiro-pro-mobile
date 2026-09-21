@@ -7,10 +7,27 @@ def estudantes_view(estudantes: EstudanteRepository, on_open) -> ft.Control:
     nome = ft.TextField(label="Nome do estudante")
     telefone = ft.TextField(label="Telefone")
     mensagem = ft.Text(size=13)
+    busca = ft.TextField(
+        label="Buscar",
+        hint_text="Nome, telefone, endereço ou observação",
+        prefix_icon=ft.Icons.SEARCH,
+    )
+    filtro_status = ft.Dropdown(
+        label="Status",
+        value="todos",
+        width=150,
+        options=[
+            ft.DropdownOption(key="todos", text="Todos"),
+            ft.DropdownOption(key="ativo", text="Ativos"),
+            ft.DropdownOption(key="pausado", text="Pausados"),
+            ft.DropdownOption(key="encerrado", text="Encerrados"),
+        ],
+    )
     lista = ft.Column(spacing=4)
 
     def carregar() -> None:
-        dados = estudantes.listar()
+        status = None if filtro_status.value == "todos" else filtro_status.value
+        dados = estudantes.buscar(busca.value or "", status)
         lista.controls = (
             [
                 ft.ListTile(
@@ -38,12 +55,16 @@ def estudantes_view(estudantes: EstudanteRepository, on_open) -> ft.Control:
                 ft.Container(
                     padding=16,
                     content=ft.Text(
-                        "Nenhum estudante cadastrado.",
+                        "Nenhum estudante encontrado.",
                         color=ft.Colors.GREY_600,
                     ),
                 )
             ]
         )
+        try:
+            lista.update()
+        except Exception:
+            pass
 
     def adicionar(_):
         if not (nome.value or "").strip():
@@ -57,13 +78,13 @@ def estudantes_view(estudantes: EstudanteRepository, on_open) -> ft.Control:
         telefone.value = ""
         mensagem.value = "Estudante adicionado."
         mensagem.color = ft.Colors.GREEN_700
-        carregar()
         nome.update()
         telefone.update()
         mensagem.update()
-        lista.update()
         on_open(novo_id)
 
+    busca.on_change = lambda _: carregar()
+    filtro_status.on_change = lambda _: carregar()
     carregar()
 
     return ft.ListView(
@@ -73,13 +94,13 @@ def estudantes_view(estudantes: EstudanteRepository, on_open) -> ft.Control:
         controls=[
             ft.Text("Estudantes", size=26, weight=ft.FontWeight.BOLD),
             ft.Text(
-                "Cadastre, acompanhe e organize seus estudos bíblicos.",
+                "Cadastre, encontre e acompanhe seus estudos bíblicos.",
                 color=ft.Colors.GREY_600,
             ),
             ft.Container(
                 padding=16,
                 border_radius=16,
-                bgcolor=ft.Colors.WHITE,
+                bgcolor=ft.Colors.SURFACE,
                 content=ft.Column(
                     controls=[
                         nome,
@@ -92,6 +113,12 @@ def estudantes_view(estudantes: EstudanteRepository, on_open) -> ft.Control:
                         ),
                     ]
                 ),
+            ),
+            ft.Row(
+                controls=[
+                    ft.Container(expand=True, content=busca),
+                    filtro_status,
+                ]
             ),
             ft.Text("Meus estudantes", size=18, weight=ft.FontWeight.BOLD),
             lista,
