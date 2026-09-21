@@ -9,14 +9,29 @@ class AtividadeRepository:
     def __init__(self, database: Database) -> None:
         self.database = database
 
-    def criar(self, data: str, tipo: str, minutos: int, observacao: str = "") -> int:
+    def criar(
+        self,
+        data: str,
+        tipo: str,
+        minutos: int,
+        observacao: str = "",
+        brochuras: int = 0,
+        folhetos: int = 0,
+        outras_publicacoes: int = 0,
+    ) -> int:
         with self.database.connect() as connection:
             cursor = connection.execute(
                 """
-                INSERT INTO atividades (data, tipo, minutos, observacao)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO atividades (
+                    data, tipo, minutos, observacao,
+                    brochuras, folhetos, outras_publicacoes
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
-                (data, tipo, minutos, observacao.strip()),
+                (
+                    data, tipo, minutos, observacao.strip(),
+                    max(0, brochuras), max(0, folhetos), max(0, outras_publicacoes)
+                ),
             )
             return int(cursor.lastrowid)
 
@@ -27,15 +42,23 @@ class AtividadeRepository:
         tipo: str,
         minutos: int,
         observacao: str = "",
+        brochuras: int = 0,
+        folhetos: int = 0,
+        outras_publicacoes: int = 0,
     ) -> None:
         with self.database.connect() as connection:
             connection.execute(
                 """
                 UPDATE atividades
-                SET data = ?, tipo = ?, minutos = ?, observacao = ?
+                SET data = ?, tipo = ?, minutos = ?, observacao = ?,
+                    brochuras = ?, folhetos = ?, outras_publicacoes = ?
                 WHERE id = ?
                 """,
-                (data, tipo, minutos, observacao.strip(), atividade_id),
+                (
+                    data, tipo, minutos, observacao.strip(),
+                    max(0, brochuras), max(0, folhetos), max(0, outras_publicacoes),
+                    atividade_id,
+                ),
             )
 
     def excluir(self, atividade_id: int) -> None:
@@ -49,7 +72,7 @@ class AtividadeRepository:
         with self.database.connect() as connection:
             row = connection.execute(
                 """
-                SELECT id, data, tipo, minutos, observacao
+                SELECT id, data, tipo, minutos, observacao, brochuras, folhetos, outras_publicacoes
                 FROM atividades
                 WHERE id = ?
                 """,
@@ -59,7 +82,7 @@ class AtividadeRepository:
 
     def listar(self, limite: int | None = None) -> list[dict]:
         sql = """
-            SELECT id, data, tipo, minutos, observacao
+            SELECT id, data, tipo, minutos, observacao, brochuras, folhetos, outras_publicacoes
             FROM atividades
             ORDER BY data DESC, id DESC
         """
@@ -95,7 +118,7 @@ class AtividadeRepository:
             params.append(tipo)
 
         sql = """
-            SELECT id, data, tipo, minutos, observacao
+            SELECT id, data, tipo, minutos, observacao, brochuras, folhetos, outras_publicacoes
             FROM atividades
         """
         if filtros:
@@ -156,6 +179,30 @@ class AtividadeRepository:
             ).fetchall()
         valores = {int(row["mes"]): int(row["minutos"]) for row in rows}
         return [{"mes": mes, "minutos": valores.get(mes, 0)} for mes in range(1, 13)]
+
+    def publicacoes_mes(self, ano: int | None = None, mes: int | None = None) -> dict[str, int]:
+        hoje = date.today()
+        ano = ano or hoje.year
+        mes = mes or hoje.month
+        prefixo = f"{ano:04d}-{mes:02d}"
+
+        with self.database.connect() as connection:
+            row = connection.execute(
+                """
+                SELECT
+                    COALESCE(SUM(brochuras), 0) AS brochuras,
+                    COALESCE(SUM(folhetos), 0) AS folhetos,
+                    COALESCE(SUM(outras_publicacoes), 0) AS outras_publicacoes
+                FROM atividades
+                WHERE substr(data, 1, 7) = ?
+                """,
+                (prefixo,),
+            ).fetchone()
+        return {
+            "brochuras": int(row["brochuras"]),
+            "folhetos": int(row["folhetos"]),
+            "outras_publicacoes": int(row["outras_publicacoes"]),
+        }
 
     def quantidade_mes(self, ano: int | None = None, mes: int | None = None) -> int:
         hoje = date.today()
