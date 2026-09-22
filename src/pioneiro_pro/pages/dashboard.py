@@ -9,95 +9,72 @@ from pioneiro_pro.repositories import (
     EstudanteRepository,
     VisitaRepository,
 )
-from pioneiro_pro.ui import (
-    ACCENT,
-    brand_gradient,
-    SUCCESS,
-    empty_state,
-    icon_badge,
-    metric_card,
-    page_header,
-    panel,
-    section_header,
-    status_pill,
-)
+from pioneiro_pro.ui import ACCENT
 from pioneiro_pro.utils import formatar_minutos
 
 
 MESES = [
-    "Janeiro",
-    "Fevereiro",
-    "Março",
-    "Abril",
-    "Maio",
-    "Junho",
-    "Julho",
-    "Agosto",
-    "Setembro",
-    "Outubro",
-    "Novembro",
-    "Dezembro",
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ]
+DIAS = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"]
 
 
-def _activity_card(item: dict) -> ft.Container:
-    tipo = item["tipo"].replace("_", " ").title()
-    publicacoes = sum(
-        int(item.get(chave, 0) or 0)
-        for chave in ("brochuras", "folhetos", "outras_publicacoes")
+def _glass(content, padding=16, radius=22, expand=None, on_click=None):
+    return ft.Container(
+        expand=expand,
+        padding=padding,
+        border_radius=radius,
+        bgcolor=ft.Colors.with_opacity(0.88, "#08243A"),
+        border=ft.Border.all(1, ft.Colors.with_opacity(0.42, "#4D9BD0")),
+        shadow=ft.BoxShadow(
+            blur_radius=18,
+            color=ft.Colors.with_opacity(0.22, ft.Colors.BLACK),
+            offset=ft.Offset(0, 7),
+        ),
+        content=content,
+        on_click=on_click,
+        ink=on_click is not None,
     )
 
-    subtitle = item["data"]
-    if item.get("observacao"):
-        subtitle += f' • {item["observacao"]}'
 
-    trailing = ft.Column(
-        spacing=2,
-        horizontal_alignment=ft.CrossAxisAlignment.END,
-        controls=[
-            ft.Text(
-                formatar_minutos(item["minutos"]),
-                weight=ft.FontWeight.BOLD,
-                color=ACCENT,
-            ),
-            (
-                ft.Text(
-                    f"{publicacoes} publ.",
-                    size=10,
-                    color=ft.Colors.GREY_500,
-                )
-                if publicacoes
-                else ft.Container()
-            ),
-        ],
-    )
-
-    return panel(
+def _metric(title, value, helper, icon, color, on_click=None):
+    return _glass(
         ft.Row(
-            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=11,
             controls=[
-                icon_badge(ft.Icons.SCHEDULE_OUTLINED),
+                ft.Container(
+                    width=48,
+                    height=48,
+                    border_radius=14,
+                    bgcolor=ft.Colors.with_opacity(0.85, color),
+                    alignment=ft.Alignment.CENTER,
+                    content=ft.Icon(icon, color=ft.Colors.WHITE, size=25),
+                ),
                 ft.Container(
                     expand=True,
                     content=ft.Column(
-                        spacing=2,
+                        spacing=0,
                         controls=[
-                            ft.Text(tipo, weight=ft.FontWeight.BOLD),
-                            ft.Text(
-                                subtitle,
-                                size=11,
-                                color=ft.Colors.GREY_500,
-                                max_lines=1,
-                                overflow=ft.TextOverflow.ELLIPSIS,
+                            ft.Text(title, size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                            ft.Row(
+                                spacing=6,
+                                vertical_alignment=ft.CrossAxisAlignment.END,
+                                controls=[
+                                    ft.Text(value, size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                                    ft.Text(helper, size=9, color=ft.Colors.WHITE_70),
+                                ],
                             ),
                         ],
                     ),
                 ),
-                trailing,
+                ft.Icon(ft.Icons.CHEVRON_RIGHT_ROUNDED, color="#91B9D6", size=20),
             ],
         ),
-        padding=14,
+        padding=11,
         radius=18,
+        expand=True,
+        on_click=on_click,
     )
 
 
@@ -114,40 +91,35 @@ def dashboard_view(
     config = configuracoes.todas()
     nome = config["nome_pioneiro"].strip()
     hoje = date.today()
-
     total = atividades.total_minutos_mes()
-    registros = atividades.quantidade_mes()
     alunos = estudantes.quantidade_ativos()
     pendentes = visitas.quantidade_pendentes()
     publicacoes = atividades.publicacoes_mes()
+    pub_total = sum(publicacoes.values())
 
     try:
-        meta_minutos = max(0, int(float(config["meta_horas_mes"]))) * 60
-    except ValueError:
-        meta_minutos = 0
-
+        meta_horas = max(0, int(float(config["meta_horas_mes"])))
+    except (ValueError, TypeError):
+        meta_horas = 0
+    meta_minutos = meta_horas * 60
     progresso = min(1.0, total / meta_minutos) if meta_minutos else 0.0
     percentual = round(progresso * 100)
-    recentes = atividades.listar_recentes(5)
+    restante = max(0, meta_minutos - total)
 
-    saudacao = f"Olá, {nome}" if nome else "Olá"
-    periodo = f"{MESES[hoje.month - 1]} de {hoje.year}"
-
-    # Cronômetro na Home: usa a mesma instância do formulário de registro.
     timer_text = ft.Text(
         cronometro.texto() if cronometro else "00:00:00",
-        size=48,
+        size=45,
         weight=ft.FontWeight.BOLD,
         color=ft.Colors.WHITE,
         text_align=ft.TextAlign.CENTER,
     )
     timer_status = ft.Text(
         "Em atividade" if cronometro and cronometro.rodando else "Pronto para iniciar",
-        size=11,
-        color=ft.Colors.ON_SURFACE_VARIANT,
+        size=10,
+        color=ft.Colors.WHITE_70,
     )
 
-    async def atualizar_timer_home() -> None:
+    async def atualizar_timer_home():
         while cronometro and cronometro.rodando and is_visible():
             timer_text.value = cronometro.texto()
             timer_status.value = "Em atividade"
@@ -188,22 +160,27 @@ def dashboard_view(
     if cronometro and cronometro.rodando and page:
         page.run_task(atualizar_timer_home)
 
-    timer_card = ft.Container(
-        padding=24,
-        border_radius=26,
-        gradient=ft.LinearGradient(colors=["#12385A", "#071A2C"], begin=ft.Alignment.TOP_LEFT, end=ft.Alignment.BOTTOM_RIGHT),
-        shadow=ft.BoxShadow(blur_radius=28, spread_radius=0, color=ft.Colors.with_opacity(0.22, ft.Colors.BLUE_900), offset=ft.Offset(0, 10)),
-        content=ft.Column(
-            spacing=10,
+    timer_card = _glass(
+        ft.Column(
+            spacing=8,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
                 ft.Row(
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     controls=[
-                        ft.Text("Cronômetro de serviço", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD),
-                        status_pill(
-                            f"Meta {formatar_minutos(meta_minutos)}" if meta_minutos else "Sem meta",
-                            color=ACCENT,
+                        ft.Text("Tempo de hoje", size=17, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                        ft.Container(
+                            padding=ft.Padding.symmetric(horizontal=12, vertical=7),
+                            border_radius=15,
+                            bgcolor=ft.Colors.with_opacity(0.72, "#061C2F"),
+                            content=ft.Column(
+                                spacing=0,
+                                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                controls=[
+                                    ft.Text("Meta do mês", size=9, color="#8EDCFF"),
+                                    ft.Text(f"{meta_horas}h" if meta_horas else "—", size=16, weight=ft.FontWeight.BOLD, color="#16B8FF"),
+                                ],
+                            ),
                         ),
                     ],
                 ),
@@ -211,232 +188,221 @@ def dashboard_view(
                 timer_status,
                 ft.Row(
                     alignment=ft.MainAxisAlignment.CENTER,
-                    spacing=14,
+                    spacing=16,
                     controls=[
-                        ft.IconButton(icon=ft.Icons.RESTART_ALT, tooltip="Zerar", on_click=zerar_timer),
+                        ft.OutlinedButton("Zerar", icon=ft.Icons.RESTART_ALT_ROUNDED, on_click=zerar_timer),
                         ft.Container(
-                            width=92,
-                            height=92,
-                            border_radius=46,
-                            gradient=ft.LinearGradient(colors=["#22C7F2", "#087CF0"], begin=ft.Alignment.TOP_LEFT, end=ft.Alignment.BOTTOM_RIGHT),
+                            width=78,
+                            height=78,
+                            border_radius=39,
+                            gradient=ft.LinearGradient(colors=["#22C7F2", "#087CF0"]),
                             alignment=ft.Alignment.CENTER,
                             content=ft.IconButton(
                                 icon=ft.Icons.PAUSE_ROUNDED if cronometro and cronometro.rodando else ft.Icons.PLAY_ARROW_ROUNDED,
-                                icon_size=42,
+                                icon_size=38,
                                 icon_color=ft.Colors.WHITE,
-                                tooltip="Pausar" if cronometro and cronometro.rodando else "Iniciar",
                                 on_click=pausar_timer if cronometro and cronometro.rodando else iniciar_timer,
                             ),
                         ),
-                        ft.IconButton(
-                            icon=ft.Icons.ADD_TASK,
-                            tooltip="Registrar este tempo",
-                            on_click=lambda _: on_navigate("registrar"),
-                        ),
-                    ],
-                ),
-                ft.Row(
-                    spacing=8,
-                    controls=[
-                        ft.Container(expand=True, height=54, border_radius=18, bgcolor=ft.Colors.with_opacity(0.14, ft.Colors.WHITE), content=ft.TextButton("Adicionar local", icon=ft.Icons.LOCATION_ON_OUTLINED, style=ft.ButtonStyle(color=ft.Colors.WHITE), on_click=lambda _: on_navigate("agenda"))),
-                        ft.Container(expand=True, height=54, border_radius=18, bgcolor=ft.Colors.with_opacity(0.14, ft.Colors.WHITE), content=ft.TextButton("Registrar", icon=ft.Icons.EDIT_NOTE, style=ft.ButtonStyle(color=ft.Colors.WHITE), on_click=lambda _: on_navigate("registrar"))),
+                        ft.OutlinedButton("Registrar", icon=ft.Icons.TIMER_OUTLINED, on_click=lambda _: on_navigate("registrar")),
                     ],
                 ),
             ],
         ),
+        padding=17,
+        radius=24,
     )
 
-    hero = ft.Container(
-        padding=20,
-        border_radius=22,
-        bgcolor="#102A40",
-        border=ft.Border.all(1, ft.Colors.with_opacity(0.08, ft.Colors.OUTLINE)),
-        shadow=ft.BoxShadow(blur_radius=20, spread_radius=0, color=ft.Colors.with_opacity(0.08, ft.Colors.BLACK), offset=ft.Offset(0, 6)),
-        content=ft.Column(
-            spacing=12,
+    greeting = ft.Container(
+        padding=ft.Padding.only(left=4, right=4, top=8, bottom=10),
+        content=ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=ft.CrossAxisAlignment.START,
             controls=[
-                ft.Row(
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    controls=[
-                        ft.Column(
-                            spacing=2,
-                            controls=[
-                                ft.Text(
-                                    "Meta mensal",
-                                    size=13,
-                                    color=ft.Colors.ON_SURFACE_VARIANT,
-                                ),
-                                ft.Text(
-                                    formatar_minutos(total),
-                                    size=32,
-                                    weight=ft.FontWeight.BOLD,
-                                    color=ft.Colors.ON_SURFACE,
-                                ),
-                            ],
-                        ),
-                        ft.Container(
-                            padding=12,
-                            border_radius=16,
-                            bgcolor=ft.Colors.with_opacity(0.12, ACCENT),
-                            content=ft.Text(
-                                f"{percentual}%",
-                                size=18,
-                                weight=ft.FontWeight.BOLD,
-                                color=ACCENT,
-                            ),
-                        ),
-                    ],
-                ),
-                ft.ProgressBar(
-                    value=progresso,
-                    color=ACCENT,
-                    bgcolor=ft.Colors.with_opacity(0.12, ACCENT),
-                ),
-                ft.Row(
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    controls=[
-                        ft.Text(
-                            periodo,
-                            size=11,
-                            color=ft.Colors.ON_SURFACE_VARIANT,
-                        ),
-                        ft.Text(
-                            (
-                                f"Meta {formatar_minutos(meta_minutos)}"
-                                if meta_minutos
-                                else "Sem meta definida"
-                            ),
-                            size=11,
-                            color=ft.Colors.ON_SURFACE_VARIANT,
-                        ),
-                    ],
-                ),
-            ],
-        ),
-    )
-
-    pub_total = sum(publicacoes.values())
-    publications_card = panel(
-        ft.Row(
-            vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            controls=[
-                icon_badge(ft.Icons.AUTO_STORIES_OUTLINED, color=SUCCESS),
                 ft.Container(
                     expand=True,
                     content=ft.Column(
-                        spacing=2,
+                        spacing=5,
                         controls=[
+                            ft.Text(f"Olá, {nome}!" if nome else "Olá!", size=28, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
                             ft.Text(
-                                "Publicações no mês",
-                                weight=ft.FontWeight.BOLD,
+                                "“Tenham sempre bastante para fazer na obra do Senhor, sabendo que o seu trabalho árduo no Senhor não é em vão.”",
+                                size=12,
+                                color=ft.Colors.WHITE,
                             ),
-                            ft.Text(
-                                (
-                                    f'{publicacoes["brochuras"]} brochuras • '
-                                    f'{publicacoes["folhetos"]} folhetos • '
-                                    f'{publicacoes["outras_publicacoes"]} outras'
-                                ),
-                                size=11,
-                                color=ft.Colors.GREY_500,
-                            ),
+                            ft.Text("1 Coríntios 15:58", size=11, weight=ft.FontWeight.BOLD, color="#D6ECFF"),
                         ],
                     ),
                 ),
-                status_pill(
-                    str(pub_total),
-                    color=SUCCESS,
-                    icon=ft.Icons.LIBRARY_BOOKS_OUTLINED,
+                ft.Container(
+                    width=78,
+                    padding=8,
+                    border_radius=17,
+                    bgcolor=ft.Colors.with_opacity(0.60, "#09243A"),
+                    content=ft.Column(
+                        spacing=0,
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        controls=[
+                            ft.Text(DIAS[hoje.weekday()], size=8, color=ft.Colors.WHITE_70),
+                            ft.Text(str(hoje.day), size=25, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                            ft.Text(f"{MESES[hoje.month - 1]} {hoje.year}", size=8, color=ft.Colors.WHITE_70),
+                        ],
+                    ),
                 ),
             ],
         ),
-        padding=15,
     )
 
-    recent_controls = (
-        [_activity_card(item) for item in recentes]
-        if recentes
-        else [
-            empty_state(
-                ft.Icons.HISTORY_TOGGLE_OFF,
-                "Seu histórico começa aqui",
-                "Registre uma atividade para acompanhar seu progresso ao longo do mês.",
-                action=ft.FilledButton(
-                    "Registrar primeira atividade",
-                    icon=ft.Icons.ADD,
-                    on_click=lambda _: on_navigate("registrar"),
+    scenic_hero = ft.Container(
+        height=505,
+        border_radius=28,
+        clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+        content=ft.Stack(
+            controls=[
+                ft.Image(src="home_scenery.svg", width=1000, height=505, fit=ft.BoxFit.COVER),
+                ft.Container(
+                    expand=True,
+                    gradient=ft.LinearGradient(
+                        begin=ft.Alignment.TOP_CENTER,
+                        end=ft.Alignment.BOTTOM_CENTER,
+                        colors=[
+                            ft.Colors.with_opacity(0.08, "#061827"),
+                            ft.Colors.with_opacity(0.18, "#061827"),
+                            ft.Colors.with_opacity(0.72, "#061827"),
+                        ],
+                    ),
                 ),
-            )
-        ]
+                ft.Container(
+                    padding=14,
+                    content=ft.Column(
+                        spacing=10,
+                        controls=[
+                            greeting,
+                            ft.Container(expand=True),
+                            timer_card,
+                        ],
+                    ),
+                ),
+            ],
+        ),
     )
 
-    quick_cards = ft.Row(
+    metrics = ft.Column(
         spacing=10,
         controls=[
-            metric_card("Registros", str(registros), ft.Icons.CHECKLIST_ROUNDED, helper="+ hoje"),
-            metric_card("Estudantes", str(alunos), ft.Icons.GROUP_OUTLINED, color=SUCCESS, helper="Ativos"),
-            metric_card("Na agenda", str(pendentes), ft.Icons.EVENT_AVAILABLE_OUTLINED, color=ft.Colors.PURPLE_500, helper="Esta semana"),
-        ],
-    )
-
-    secondary_cards = ft.Row(
-        spacing=10,
-        controls=[
-            metric_card("Publicações", str(pub_total), ft.Icons.AUTO_STORIES_OUTLINED, color=ft.Colors.ORANGE_600, helper="Este mês"),
-            metric_card("Próximos", str(pendentes), ft.Icons.NEAR_ME_OUTLINED, color=ft.Colors.CYAN_600, helper="Ao seu redor"),
-            ft.Container(
-                expand=True,
-                padding=14,
-                border_radius=22,
-                gradient=brand_gradient(),
-                content=ft.Column(
-                    spacing=8,
-                    controls=[
-                        ft.Icon(ft.Icons.BAR_CHART_ROUNDED, color=ft.Colors.WHITE, size=26),
-                        ft.Text("Relatórios", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD),
-                        ft.Text("Ver progresso ›", size=11, color=ft.Colors.WHITE_70),
-                    ],
-                ),
-                on_click=lambda _: on_navigate("relatorios"),
-                ink=True,
+            ft.Row(
+                spacing=10,
+                controls=[
+                    _metric("Estudantes", str(alunos), "ativos", ft.Icons.GROUP_ROUNDED, "#087CF0", lambda _: on_navigate("estudantes")),
+                    _metric("Na agenda", str(pendentes), "pendentes", ft.Icons.CALENDAR_MONTH_ROUNDED, "#7B16D9", lambda _: on_navigate("agenda")),
+                ],
+            ),
+            ft.Row(
+                spacing=10,
+                controls=[
+                    _metric("Publicações", str(pub_total), f'{publicacoes["brochuras"]} broch. • {publicacoes["folhetos"]} folh.', ft.Icons.AUTO_STORIES_ROUNDED, "#008C3A", lambda _: on_navigate("relatorios")),
+                    _metric("Relatórios", formatar_minutos(total), MESES[hoje.month - 1], ft.Icons.BAR_CHART_ROUNDED, "#087CF0", lambda _: on_navigate("relatorios")),
+                ],
             ),
         ],
     )
+
+    progress_card = _glass(
+        ft.Column(
+            spacing=8,
+            controls=[
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    controls=[
+                        ft.Text("Meu progresso este mês", size=15, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                        ft.Text(f"{percentual}%", weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                    ],
+                ),
+                ft.ProgressBar(value=progresso, color="#16B8FF", bgcolor="#214C6D"),
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    controls=[
+                        ft.Text(f"{formatar_minutos(total)} de {meta_horas}h" if meta_horas else formatar_minutos(total), size=10, color=ft.Colors.WHITE_70),
+                        ft.Text(f"{formatar_minutos(restante)} restantes" if meta_horas else "Defina sua meta", size=10, color=ft.Colors.WHITE_70),
+                    ],
+                ),
+            ],
+        ),
+        padding=14,
+        radius=19,
+    )
+
+    futuras = [v for v in visitas.listar(somente_futuras=True) if not v.get("concluida")]
+    proxima = futuras[0] if futuras else None
+    if proxima:
+        nome_visita = proxima.get("estudante_nome") or proxima.get("tipo", "Visita").replace("_", " ").title()
+        visita_card = _glass(
+            ft.Column(
+                spacing=9,
+                controls=[
+                    ft.Row(
+                        controls=[
+                            ft.Icon(ft.Icons.GROUP_ROUNDED, color="#73C9FF"),
+                            ft.Container(
+                                expand=True,
+                                content=ft.Column(
+                                    spacing=1,
+                                    controls=[
+                                        ft.Text(nome_visita, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                                        ft.Text(proxima.get("observacao") or proxima.get("tipo", "").replace("_", " ").title(), size=10, color=ft.Colors.WHITE_70),
+                                    ],
+                                ),
+                            ),
+                            ft.Column(
+                                spacing=0,
+                                horizontal_alignment=ft.CrossAxisAlignment.END,
+                                controls=[
+                                    ft.Text("Hoje" if proxima["data"] == hoje.isoformat() else proxima["data"], size=9, color=ft.Colors.WHITE_70),
+                                    ft.Text(proxima.get("horario") or "—", weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                                ],
+                            ),
+                        ],
+                    ),
+                    ft.Row(
+                        spacing=10,
+                        controls=[
+                            ft.OutlinedButton("Ver na agenda", icon=ft.Icons.LOCATION_ON_OUTLINED, expand=True, on_click=lambda _: on_navigate("agenda")),
+                            ft.FilledButton("Iniciar visita", icon=ft.Icons.PLAY_ARROW_ROUNDED, expand=True, on_click=lambda _: on_navigate("agenda")),
+                        ],
+                    ),
+                ],
+            ),
+            padding=14,
+            radius=19,
+        )
+    else:
+        visita_card = _glass(
+            ft.Row(
+                controls=[
+                    ft.Icon(ft.Icons.EVENT_AVAILABLE_ROUNDED, color="#73C9FF"),
+                    ft.Text("Nenhuma visita pendente.", color=ft.Colors.WHITE_70),
+                ],
+            ),
+            padding=14,
+            radius=19,
+        )
 
     return ft.ListView(
         expand=True,
-        padding=ft.Padding.only(left=18, right=18, top=8, bottom=18),
-        spacing=14,
+        padding=ft.Padding.only(left=14, right=14, top=6, bottom=18),
+        spacing=12,
         controls=[
-            ft.Container(
-                padding=ft.Padding.symmetric(horizontal=4, vertical=8),
-                content=ft.Row(
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                    controls=[
-                        ft.Column(
-                            spacing=2,
-                            controls=[
-                                ft.Text(saudacao + "! 👋", size=28, weight=ft.FontWeight.BOLD),
-                                ft.Text("Mais organização para servir Jeová", size=12, color=ft.Colors.ON_SURFACE_VARIANT),
-                            ],
-                        ),
-                        icon_badge(ft.Icons.NOTIFICATIONS_NONE_ROUNDED, color=ACCENT),
-                    ],
-                ),
+            scenic_hero,
+            metrics,
+            progress_card,
+            ft.Row(
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                controls=[
+                    ft.Text("Próximas visitas", size=18, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                    ft.TextButton("Ver todas", on_click=lambda _: on_navigate("agenda")),
+                ],
             ),
-            timer_card,
-            hero,
-            quick_cards,
-            secondary_cards,
-            section_header(
-                "Atividades recentes",
-                subtitle="Seus últimos registros",
-                trailing=ft.TextButton(
-                    "Ver histórico",
-                    on_click=lambda _: on_navigate("relatorios"),
-                ),
-            ),
-            *recent_controls,
-            ft.Container(height=6),
+            visita_card,
+            ft.Container(height=4),
         ],
     )
