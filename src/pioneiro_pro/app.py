@@ -487,6 +487,9 @@ class PioneiroProApp:
                 self.visitas,
                 self.configuracoes,
                 self.navigate,
+                page=self.page,
+                cronometro=self.cronometro,
+                is_visible=lambda: self.current_key == "dashboard",
             )
         elif key == "registrar":
             control = registrar_view(
@@ -549,6 +552,9 @@ class PioneiroProApp:
                 self.visitas,
                 self.configuracoes,
                 self.navigate,
+                page=self.page,
+                cronometro=self.cronometro,
+                is_visible=lambda: self.current_key == "dashboard",
             )
 
         self.content.content = control
