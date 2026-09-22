@@ -393,7 +393,7 @@ def dashboard_view(
                     controls=[
                         ft.Icon(ft.Icons.BAR_CHART_ROUNDED, color=ft.Colors.WHITE, size=26),
                         ft.Text("Relatórios", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD),
-                        ft.Text("Ver progresso ›", size=11, color=ft.Colors.WHITE70),
+                        ft.Text("Ver progresso ›", size=11, color=ft.Colors.WHITE_70),
                     ],
                 ),
                 on_click=lambda _: on_navigate("relatorios"),
