@@ -23,7 +23,7 @@ def test_panel_moderno_usa_superficie_e_borda_sem_sombra_por_padrao():
     assert card.content is not None
     assert card.border is not None
     assert card.shadow is None
-    assert card.border_radius == 20
+    assert card.border_radius == 16
 
 
 def test_panel_elevado_continua_disponivel_quando_necessario():
