@@ -378,7 +378,7 @@ def relatorios_view(
                         ),
                         status_pill(
                             f"{round(progresso_mes * 100)}%",
-                            color=SUCCESS,
+                            color=ft.Colors.WHITE,
                             icon=ft.Icons.TRENDING_UP,
                         ),
                     ],
