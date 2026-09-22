@@ -89,6 +89,21 @@ def agenda_view(
     )
     mensagem = ft.Text(size=12)
 
+    def atualizar_se_montado(*controls: ft.Control) -> None:
+        """Atualiza controles apenas enquanto ainda pertencem à página atual.
+
+        Chamadas assíncronas de localização podem devolver o resultado depois
+        que a navegação recriou a view. Nesse caso, update() em um controle
+        antigo dispara "Control must be added to the page first".
+        """
+        for control in controls:
+            try:
+                if control.page is not None:
+                    control.update()
+            except RuntimeError:
+                # A view foi desmontada enquanto a operação assíncrona terminava.
+                pass
+
     lista = ft.Column(spacing=10)
     titulo_form = ft.Text("Novo compromisso", size=18, weight=ft.FontWeight.BOLD)
     botao_salvar = ft.FilledButton("Adicionar à agenda", icon=ft.Icons.ADD)
@@ -325,7 +340,7 @@ def agenda_view(
             if resultado.code == "service_disabled":
                 mensagem.value = "Ative a localização do aparelho para salvar este ponto."
                 mensagem.color = WARNING
-                mensagem.update()
+                atualizar_se_montado(mensagem)
                 await geolocator.open_location_settings()
                 return
 
@@ -335,13 +350,13 @@ def agenda_view(
                     "Abra as configurações do app e permita o acesso."
                 )
                 mensagem.color = WARNING
-                mensagem.update()
+                atualizar_se_montado(mensagem)
                 await geolocator.open_app_settings()
                 return
 
             mensagem.value = "Permissão de localização não concedida."
             mensagem.color = DANGER
-            mensagem.update()
+            atualizar_se_montado(mensagem)
             return
 
         posicao = resultado.position
@@ -349,16 +364,15 @@ def agenda_view(
         localizacao["lon"] = float(posicao.longitude)
         localizacao_status.value = "Localização específica salva neste compromisso."
         localizacao_status.color = SUCCESS
-        localizacao_status.update()
         mensagem.value = "Localização salva para este compromisso."
         mensagem.color = SUCCESS
-        mensagem.update()
+        atualizar_se_montado(localizacao_status, mensagem)
 
     def salvar(_):
         if not (data.value or "").strip():
             mensagem.value = "Informe a data."
             mensagem.color = DANGER
-            mensagem.update()
+            atualizar_se_montado(mensagem)
             return
 
         estudante_id = int(estudante.value) if estudante.value else None

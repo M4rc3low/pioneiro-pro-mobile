@@ -27,10 +27,10 @@ def brand_gradient() -> ft.LinearGradient:
 
 def soft_shadow() -> ft.BoxShadow:
     return ft.BoxShadow(
-        blur_radius=12,
+        blur_radius=18,
         spread_radius=0,
-        color=ft.Colors.with_opacity(0.05, ft.Colors.BLACK),
-        offset=ft.Offset(0, 3),
+        color=ft.Colors.with_opacity(0.10, ft.Colors.BLACK),
+        offset=ft.Offset(0, 6),
     )
 
 
@@ -195,8 +195,9 @@ def metric_card(
     return panel(
         ft.Column(spacing=8, controls=controls),
         padding=14,
-        radius=18,
+        radius=22,
         expand=True,
+        bgcolor=ft.Colors.SURFACE_CONTAINER,
     )
 
 
