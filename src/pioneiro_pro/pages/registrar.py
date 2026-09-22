@@ -162,7 +162,7 @@ def registrar_view(
 
     timer_card = ft.Container(
         padding=22,
-        border_radius=26,
+        border_radius=20,
         gradient=brand_gradient(),
         content=ft.Column(
             spacing=12,
@@ -225,8 +225,8 @@ def registrar_view(
 
     return ft.ListView(
         expand=True,
-        padding=18,
-        spacing=16,
+        padding=14,
+        spacing=12,
         controls=[
             page_header(
                 "Registrar atividade",
