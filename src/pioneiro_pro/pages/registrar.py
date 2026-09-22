@@ -214,7 +214,7 @@ def registrar_view(
                         ),
                     ],
                 ),
-                ft.TextButton(
+                ft.OutlinedButton(
                     "Usar este tempo no registro",
                     icon=ft.Icons.DOWNLOAD_DONE,
                     on_click=usar_tempo,
