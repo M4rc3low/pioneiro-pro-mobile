@@ -421,11 +421,11 @@ def agenda_view(
             ),
             panel(
                 ft.Column(
-                    spacing=12,
+                    spacing=14,
                     controls=[
                         section_header(
-                            "Novo compromisso",
-                            subtitle="Defina horário, lembrete e proximidade.",
+                            "Planejar compromisso",
+                            subtitle="Organize a próxima visita sem perder nenhum detalhe.",
                             trailing=icon_badge(ft.Icons.ADD_TASK_OUTLINED),
                         ),
                         titulo_form,
@@ -471,7 +471,7 @@ def agenda_view(
                         ft.Row(
                             controls=[
                                 ft.Container(expand=True, content=botao_salvar),
-                                ft.TextButton(
+                                ft.OutlinedButton(
                                     "Limpar",
                                     icon=ft.Icons.REFRESH,
                                     on_click=lambda _: limpar_form(),
