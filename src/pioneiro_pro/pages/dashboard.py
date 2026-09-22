@@ -369,10 +369,43 @@ def dashboard_view(
         ]
     )
 
+    quick_cards = ft.Row(
+        spacing=10,
+        controls=[
+            metric_card("Registros", str(registros), ft.Icons.CHECKLIST_ROUNDED, helper="+ hoje"),
+            metric_card("Estudantes", str(alunos), ft.Icons.GROUP_OUTLINED, color=SUCCESS, helper="Ativos"),
+            metric_card("Na agenda", str(pendentes), ft.Icons.EVENT_AVAILABLE_OUTLINED, color=ft.Colors.PURPLE_500, helper="Esta semana"),
+        ],
+    )
+
+    secondary_cards = ft.Row(
+        spacing=10,
+        controls=[
+            metric_card("Publicações", str(pub_total), ft.Icons.AUTO_STORIES_OUTLINED, color=ft.Colors.ORANGE_600, helper="Este mês"),
+            metric_card("Próximos", str(pendentes), ft.Icons.NEAR_ME_OUTLINED, color=ft.Colors.CYAN_600, helper="Ao seu redor"),
+            ft.Container(
+                expand=True,
+                padding=14,
+                border_radius=22,
+                gradient=brand_gradient(),
+                content=ft.Column(
+                    spacing=8,
+                    controls=[
+                        ft.Icon(ft.Icons.BAR_CHART_ROUNDED, color=ft.Colors.WHITE, size=26),
+                        ft.Text("Relatórios", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD),
+                        ft.Text("Ver progresso ›", size=11, color=ft.Colors.WHITE70),
+                    ],
+                ),
+                on_click=lambda _: on_navigate("relatorios"),
+                ink=True,
+            ),
+        ],
+    )
+
     return ft.ListView(
         expand=True,
-        padding=18,
-        spacing=16,
+        padding=ft.Padding.only(left=18, right=18, top=8, bottom=18),
+        spacing=14,
         controls=[
             ft.Container(
                 padding=ft.Padding.symmetric(horizontal=4, vertical=8),
@@ -384,7 +417,7 @@ def dashboard_view(
                             spacing=2,
                             controls=[
                                 ft.Text(saudacao + "! 👋", size=30, weight=ft.FontWeight.BOLD),
-                                ft.Text("Que seu dia de serviço seja produtivo e bem organizado.", size=12, color=ft.Colors.ON_SURFACE_VARIANT),
+                                ft.Text("Que Jeová abençoe seu dia de serviço!", size=12, color=ft.Colors.ON_SURFACE_VARIANT),
                             ],
                         ),
                         icon_badge(ft.Icons.NOTIFICATIONS_NONE_ROUNDED, color=ACCENT),
@@ -393,40 +426,8 @@ def dashboard_view(
             ),
             timer_card,
             hero,
-            ft.Row(
-                spacing=10,
-                controls=[
-                    metric_card("Registros", str(registros), ft.Icons.CHECKLIST_ROUNDED),
-                    metric_card("Estudantes", str(alunos), ft.Icons.GROUP_OUTLINED, color=SUCCESS),
-                    metric_card("Na agenda", str(pendentes), ft.Icons.EVENT_AVAILABLE_OUTLINED, color=ft.Colors.PURPLE_500),
-                ],
-            ),
-            publications_card,
-            section_header(
-                "Ações rápidas",
-                subtitle="O que você quer fazer agora?",
-            ),
-            ft.Row(
-                spacing=10,
-                controls=[
-                    ft.Container(
-                        expand=True,
-                        content=ft.FilledButton(
-                            "Registrar",
-                            icon=ft.Icons.ADD_CIRCLE_OUTLINE,
-                            on_click=lambda _: on_navigate("registrar"),
-                        ),
-                    ),
-                    ft.Container(
-                        expand=True,
-                        content=ft.OutlinedButton(
-                            "Agenda",
-                            icon=ft.Icons.CALENDAR_MONTH_OUTLINED,
-                            on_click=lambda _: on_navigate("agenda"),
-                        ),
-                    ),
-                ],
-            ),
+            quick_cards,
+            secondary_cards,
             section_header(
                 "Atividades recentes",
                 subtitle="Seus últimos registros",
