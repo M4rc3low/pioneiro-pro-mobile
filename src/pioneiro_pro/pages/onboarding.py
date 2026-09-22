@@ -81,7 +81,7 @@ def onboarding_view(
                     color=ft.Colors.WHITE,
                 ),
                 ft.Text(
-                    "Organização pessoal com mais clareza, menos esforço.",
+                    "Mais organização. Mais tempo para o que importa.",
                     color=ft.Colors.BLUE_100,
                     text_align=ft.TextAlign.CENTER,
                 ),
