@@ -1,3 +1,4 @@
+import asyncio
 from datetime import date
 
 import flet as ft
@@ -106,6 +107,9 @@ def dashboard_view(
     visitas: VisitaRepository,
     configuracoes: ConfiguracaoRepository,
     on_navigate,
+    page: ft.Page | None = None,
+    cronometro=None,
+    is_visible=lambda: True,
 ) -> ft.Control:
     config = configuracoes.todas()
     nome = config["nome_pioneiro"].strip()
@@ -128,6 +132,109 @@ def dashboard_view(
 
     saudacao = f"Olá, {nome}" if nome else "Olá"
     periodo = f"{MESES[hoje.month - 1]} de {hoje.year}"
+
+    # Cronômetro na Home: usa a mesma instância do formulário de registro.
+    timer_text = ft.Text(
+        cronometro.texto() if cronometro else "00:00:00",
+        size=40,
+        weight=ft.FontWeight.BOLD,
+        color=ft.Colors.WHITE,
+        text_align=ft.TextAlign.CENTER,
+    )
+    timer_status = ft.Text(
+        "Em atividade" if cronometro and cronometro.rodando else "Pronto para iniciar",
+        size=11,
+        color=ft.Colors.BLUE_100,
+    )
+
+    async def atualizar_timer_home() -> None:
+        while cronometro and cronometro.rodando and is_visible():
+            timer_text.value = cronometro.texto()
+            timer_status.value = "Em atividade"
+            try:
+                timer_text.update()
+                timer_status.update()
+            except Exception:
+                return
+            await asyncio.sleep(1)
+
+    def iniciar_timer(_):
+        if not cronometro:
+            return
+        cronometro.iniciar()
+        timer_status.value = "Em atividade"
+        timer_status.update()
+        if page:
+            page.run_task(atualizar_timer_home)
+
+    def pausar_timer(_):
+        if not cronometro:
+            return
+        cronometro.pausar()
+        timer_text.value = cronometro.texto()
+        timer_status.value = "Pausado"
+        timer_text.update()
+        timer_status.update()
+
+    def zerar_timer(_):
+        if not cronometro:
+            return
+        cronometro.zerar()
+        timer_text.value = cronometro.texto()
+        timer_status.value = "Pronto para iniciar"
+        timer_text.update()
+        timer_status.update()
+
+    if cronometro and cronometro.rodando and page:
+        page.run_task(atualizar_timer_home)
+
+    timer_card = ft.Container(
+        padding=20,
+        border_radius=26,
+        gradient=brand_gradient(),
+        content=ft.Column(
+            spacing=10,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    controls=[
+                        ft.Text("Cronômetro de serviço", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD),
+                        status_pill(
+                            f"Meta {formatar_minutos(meta_minutos)}" if meta_minutos else "Sem meta",
+                            color=ACCENT,
+                        ),
+                    ],
+                ),
+                timer_text,
+                timer_status,
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    spacing=14,
+                    controls=[
+                        ft.IconButton(icon=ft.Icons.RESTART_ALT, tooltip="Zerar", on_click=zerar_timer),
+                        ft.FilledButton(
+                            "Pausar" if cronometro and cronometro.rodando else "Iniciar",
+                            icon=ft.Icons.PAUSE if cronometro and cronometro.rodando else ft.Icons.PLAY_ARROW,
+                            on_click=pausar_timer if cronometro and cronometro.rodando else iniciar_timer,
+                        ),
+                        ft.IconButton(
+                            icon=ft.Icons.ADD_TASK,
+                            tooltip="Registrar este tempo",
+                            on_click=lambda _: on_navigate("registrar"),
+                        ),
+                    ],
+                ),
+                ft.Row(
+                    spacing=8,
+                    controls=[
+                        ft.Container(expand=True, content=ft.OutlinedButton("Adicionar local", icon=ft.Icons.LOCATION_ON_OUTLINED, on_click=lambda _: on_navigate("agenda"))),
+                        ft.Container(expand=True, content=ft.OutlinedButton("Registrar", icon=ft.Icons.EDIT_NOTE, on_click=lambda _: on_navigate("registrar"))),
+                    ],
+                ),
+            ],
+        ),
+    )
 
     hero = ft.Container(
         padding=22,
@@ -260,6 +367,7 @@ def dashboard_view(
                 "Acompanhe seu mês de forma simples e visual.",
                 ft.Icons.WAVING_HAND_OUTLINED,
             ),
+            timer_card,
             hero,
             ft.Row(
                 spacing=10,
