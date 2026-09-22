@@ -372,7 +372,9 @@ class PioneiroProApp:
 
     def _ativar_shell(self) -> None:
         self.page.navigation_bar = self.nav
-        self.page.appbar = ft.AppBar(\n            toolbar_height=62,\n            bgcolor="#061827",
+        self.page.appbar = ft.AppBar(
+            toolbar_height=62,
+            bgcolor="#061827",
             elevation=0,
             title=ft.Row(
                 spacing=10,
@@ -382,11 +384,15 @@ class PioneiroProApp:
                         spacing=0,
                         controls=[
                             ft.Text(
-                                "Pioneiro Pro",\n                                size=17,\n                                weight=ft.FontWeight.BOLD,\n                                color=ft.Colors.WHITE,
+                                "Pioneiro Pro",
+                                size=17,
+                                weight=ft.FontWeight.BOLD,
+                                color=ft.Colors.WHITE,
                             ),
                             ft.Text(
                                 "Mais organização para servir Jeová",
-                                size=10,\n                                color="#9CB3C5",
+                                size=10,
+                                color="#9CB3C5",
                             ),
                         ],
                     ),
@@ -395,7 +401,9 @@ class PioneiroProApp:
             center_title=False,
             actions=[
                 ft.IconButton(
-                    icon=ft.Icons.SETTINGS_OUTLINED,\n                    icon_color="#9CB3C5",\n                    tooltip="Configurações",
+                    icon=ft.Icons.SETTINGS_OUTLINED,
+                    icon_color="#9CB3C5",
+                    tooltip="Configurações",
                     on_click=lambda _: self.navigate("configuracoes"),
                 )
             ],
