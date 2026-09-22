@@ -73,7 +73,7 @@ def panel(
     radius: int = 20,
     expand: bool | int | None = None,
     bgcolor: str | None = None,
-    elevated: bool = True,
+    elevated: bool = False,
 ) -> ft.Container:
     return ft.Container(
         expand=expand,
