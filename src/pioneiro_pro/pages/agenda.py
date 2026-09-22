@@ -37,6 +37,7 @@ def agenda_view(
 
     estudante = ft.Dropdown(
         label="Estudante",
+        text_size=14,
         options=[
             ft.DropdownOption(key=str(item["id"]), text=item["nome"])
             for item in estudantes.listar()
@@ -46,6 +47,7 @@ def agenda_view(
     horario = ft.TextField(label="Horário", hint_text="Ex.: 19:30")
     tipo = ft.Dropdown(
         label="Tipo",
+        text_size=14,
         value="estudo",
         options=[
             ft.DropdownOption(key="estudo", text="Estudo bíblico"),
@@ -56,17 +58,19 @@ def agenda_view(
     )
     lembrete = ft.Dropdown(
         label="Lembrar antes",
+        text_size=14,
         value="30",
         options=[
             ft.DropdownOption(key="0", text="No horário"),
-            ft.DropdownOption(key="10", text="10 minutos antes"),
-            ft.DropdownOption(key="30", text="30 minutos antes"),
-            ft.DropdownOption(key="60", text="1 hora antes"),
-            ft.DropdownOption(key="1440", text="1 dia antes"),
+            ft.DropdownOption(key="10", text="10 min"),
+            ft.DropdownOption(key="30", text="30 min"),
+            ft.DropdownOption(key="60", text="1 hora"),
+            ft.DropdownOption(key="1440", text="1 dia"),
         ],
     )
     raio_proximidade = ft.Dropdown(
         label="Raio do aviso por proximidade",
+        text_size=14,
         value="200",
         options=[
             ft.DropdownOption(key="100", text="100 m"),
