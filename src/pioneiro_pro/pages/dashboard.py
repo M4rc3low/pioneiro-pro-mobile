@@ -362,44 +362,31 @@ def dashboard_view(
         padding=18,
         spacing=16,
         controls=[
-            page_header(
-                saudacao,
-                "Acompanhe seu mês de forma simples e visual.",
-                ft.Icons.WAVING_HAND_OUTLINED,
+            ft.Container(
+                padding=ft.Padding.symmetric(horizontal=4, vertical=6),
+                content=ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    controls=[
+                        ft.Column(
+                            spacing=2,
+                            controls=[
+                                ft.Text(saudacao + "! 👋", size=27, weight=ft.FontWeight.BOLD),
+                                ft.Text("Seu serviço, suas metas e sua agenda em um só lugar.", size=11, color=ft.Colors.GREY_500),
+                            ],
+                        ),
+                        icon_badge(ft.Icons.NOTIFICATIONS_NONE_ROUNDED, color=ACCENT),
+                    ],
+                ),
             ),
             timer_card,
             hero,
             ft.Row(
                 spacing=10,
                 controls=[
-                    metric_card(
-                        "Registros",
-                        str(registros),
-                        ft.Icons.CHECKLIST_ROUNDED,
-                    ),
-                    metric_card(
-                        "Estudantes",
-                        str(alunos),
-                        ft.Icons.GROUP_OUTLINED,
-                        color=SUCCESS,
-                    ),
-                ],
-            ),
-            ft.Row(
-                spacing=10,
-                controls=[
-                    metric_card(
-                        "Na agenda",
-                        str(pendentes),
-                        ft.Icons.EVENT_AVAILABLE_OUTLINED,
-                        color=ft.Colors.PURPLE_500,
-                    ),
-                    metric_card(
-                        "Tempo",
-                        formatar_minutos(total),
-                        ft.Icons.TIMER_OUTLINED,
-                        color=ft.Colors.ORANGE_600,
-                    ),
+                    metric_card("Registros", str(registros), ft.Icons.CHECKLIST_ROUNDED),
+                    metric_card("Estudantes", str(alunos), ft.Icons.GROUP_OUTLINED, color=SUCCESS),
+                    metric_card("Na agenda", str(pendentes), ft.Icons.EVENT_AVAILABLE_OUTLINED, color=ft.Colors.PURPLE_500),
                 ],
             ),
             publications_card,
