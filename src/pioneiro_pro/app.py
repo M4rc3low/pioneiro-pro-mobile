@@ -107,7 +107,17 @@ class PioneiroProApp:
         self.page.padding = 0
         self.page.bgcolor = "#061827"
         self.page.theme_mode = ft.ThemeMode.DARK
-        self.page.theme = ft.Theme(\n            color_scheme_seed="#18A9FF",\n            scaffold_bgcolor="#061827",\n            color_scheme=ft.ColorScheme(\n                primary="#18A9FF",\n                on_primary=ft.Colors.WHITE,\n                surface="#0A2940",\n                on_surface=ft.Colors.WHITE,\n                outline="#7890A3",\n            ),\n        )
+        self.page.theme = ft.Theme(
+            color_scheme_seed="#18A9FF",
+            scaffold_bgcolor="#061827",
+            color_scheme=ft.ColorScheme(
+                primary="#18A9FF",
+                on_primary=ft.Colors.WHITE,
+                surface="#0A2940",
+                on_surface=ft.Colors.WHITE,
+                outline="#7890A3",
+            ),
+        )
         self.page.on_app_lifecycle_state_change = self._on_lifecycle
         self._configurar_geolocalizacao()
         self.notifications = AndroidNotificationService(self.page)
