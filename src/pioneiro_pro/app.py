@@ -106,13 +106,8 @@ class PioneiroProApp:
         self.page.title = "Pioneiro Pro"
         self.page.padding = 0
         self.page.bgcolor = "#061827"
-        self.page.theme_mode = (
-            ft.ThemeMode.DARK if config["tema"] == "escuro" else ft.ThemeMode.LIGHT
-        )
-        self.page.theme = ft.Theme(
-            color_scheme_seed=ft.Colors.BLUE_600,
-            scaffold_bgcolor="#061827",
-        )
+        self.page.theme_mode = ft.ThemeMode.DARK
+        self.page.theme = ft.Theme(\n            color_scheme_seed="#18A9FF",\n            scaffold_bgcolor="#061827",\n            color_scheme=ft.ColorScheme(\n                primary="#18A9FF",\n                on_primary=ft.Colors.WHITE,\n                surface="#0A2940",\n                on_surface=ft.Colors.WHITE,\n                outline="#7890A3",\n            ),\n        )
         self.page.on_app_lifecycle_state_change = self._on_lifecycle
         self._configurar_geolocalizacao()
         self.notifications = AndroidNotificationService(self.page)
@@ -367,8 +362,7 @@ class PioneiroProApp:
 
     def _ativar_shell(self) -> None:
         self.page.navigation_bar = self.nav
-        self.page.appbar = ft.AppBar(
-            bgcolor=ft.Colors.TRANSPARENT,
+        self.page.appbar = ft.AppBar(\n            toolbar_height=62,\n            bgcolor="#061827",
             elevation=0,
             title=ft.Row(
                 spacing=10,
@@ -378,14 +372,11 @@ class PioneiroProApp:
                         spacing=0,
                         controls=[
                             ft.Text(
-                                "Pioneiro Pro",
-                                size=18,
-                                weight=ft.FontWeight.BOLD,
+                                "Pioneiro Pro",\n                                size=17,\n                                weight=ft.FontWeight.BOLD,\n                                color=ft.Colors.WHITE,
                             ),
                             ft.Text(
                                 "Mais organização para servir Jeová",
-                                size=10,
-                                color=ft.Colors.GREY_500,
+                                size=10,\n                                color="#9CB3C5",
                             ),
                         ],
                     ),
@@ -394,8 +385,7 @@ class PioneiroProApp:
             center_title=False,
             actions=[
                 ft.IconButton(
-                    icon=ft.Icons.SETTINGS_OUTLINED,
-                    tooltip="Configurações",
+                    icon=ft.Icons.SETTINGS_OUTLINED,\n                    icon_color="#9CB3C5",\n                    tooltip="Configurações",
                     on_click=lambda _: self.navigate("configuracoes"),
                 )
             ],
@@ -471,9 +461,7 @@ class PioneiroProApp:
 
     def _dados_restaurados(self) -> None:
         config = self.configuracoes.todas()
-        self.page.theme_mode = (
-            ft.ThemeMode.DARK if config["tema"] == "escuro" else ft.ThemeMode.LIGHT
-        )
+        self.page.theme_mode = ft.ThemeMode.DARK
         self.navigate("dashboard")
 
     def navigate(self, key: str, update_nav: bool = True, **kwargs) -> None:
