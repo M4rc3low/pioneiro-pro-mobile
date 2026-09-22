@@ -108,7 +108,7 @@ def dashboard_view(
 
     timer_text = ft.Text(
         cronometro.texto() if cronometro else "00:00:00",
-        size=45,
+        size=40,
         weight=ft.FontWeight.BOLD,
         color=ft.Colors.WHITE,
         text_align=ft.TextAlign.CENTER,
@@ -199,7 +199,7 @@ def dashboard_view(
                             alignment=ft.Alignment.CENTER,
                             content=ft.IconButton(
                                 icon=ft.Icons.PAUSE_ROUNDED if cronometro and cronometro.rodando else ft.Icons.PLAY_ARROW_ROUNDED,
-                                icon_size=38,
+                                icon_size=33,
                                 icon_color=ft.Colors.WHITE,
                                 on_click=pausar_timer if cronometro and cronometro.rodando else iniciar_timer,
                             ),
@@ -224,7 +224,7 @@ def dashboard_view(
                     content=ft.Column(
                         spacing=5,
                         controls=[
-                            ft.Text(f"Olá, {nome}!" if nome else "Olá!", size=28, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                            ft.Text(f"Olá, {nome}!" if nome else "Olá!", size=25, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
                             ft.Text(
                                 "“Tenham sempre bastante para fazer na obra do Senhor, sabendo que o seu trabalho árduo no Senhor não é em vão.”",
                                 size=12,
@@ -254,12 +254,12 @@ def dashboard_view(
     )
 
     scenic_hero = ft.Container(
-        height=505,
+        height=455,
         border_radius=28,
         clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
         content=ft.Stack(
             controls=[
-                ft.Image(src="home_scenery.svg", width=1000, height=505, fit=ft.BoxFit.COVER),
+                ft.Image(src="https://images.unsplash.com/photo-1759390084722-c246aeadb6a1?auto=format&fit=crop&fm=jpg&q=82&w=1600", width=1000, height=455, fit=ft.BoxFit.COVER),
                 ft.Container(
                     expand=True,
                     gradient=ft.LinearGradient(

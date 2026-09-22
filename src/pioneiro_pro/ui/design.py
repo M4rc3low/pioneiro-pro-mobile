@@ -3,24 +3,20 @@ from __future__ import annotations
 import flet as ft
 
 
-ACCENT = ft.Colors.BLUE_600
-ACCENT_STRONG = ft.Colors.BLUE_700
-ACCENT_SOFT = ft.Colors.BLUE_100
+ACCENT = "#18A9FF"
+ACCENT_STRONG = "#087CF0"
+ACCENT_SOFT = "#9EDCFF"
 SUCCESS = ft.Colors.GREEN_600
 WARNING = ft.Colors.ORANGE_600
 DANGER = ft.Colors.RED_600
-MUTED = ft.Colors.ON_SURFACE_VARIANT
+MUTED = "#9CB3C5"
 
 
 def brand_gradient() -> ft.LinearGradient:
     return ft.LinearGradient(
         begin=ft.Alignment.TOP_LEFT,
         end=ft.Alignment.BOTTOM_RIGHT,
-        colors=[
-            ft.Colors.BLUE_800,
-            ft.Colors.BLUE_600,
-            ft.Colors.CYAN_500,
-        ],
+        colors=["#0B4F91", "#087CF0", "#12B8D4"],
         stops=[0.0, 0.62, 1.0],
     )
 
@@ -29,7 +25,7 @@ def soft_shadow() -> ft.BoxShadow:
     return ft.BoxShadow(
         blur_radius=18,
         spread_radius=0,
-        color=ft.Colors.with_opacity(0.10, ft.Colors.BLACK),
+        color=ft.Colors.with_opacity(0.24, ft.Colors.BLACK),
         offset=ft.Offset(0, 6),
     )
 
@@ -70,7 +66,7 @@ def panel(
     content: ft.Control,
     *,
     padding: int = 16,
-    radius: int = 20,
+    radius: int = 16,
     expand: bool | int | None = None,
     bgcolor: str | None = None,
     elevated: bool = False,
@@ -79,10 +75,10 @@ def panel(
         expand=expand,
         padding=padding,
         border_radius=radius,
-        bgcolor=bgcolor or ft.Colors.SURFACE,
+        bgcolor=bgcolor or "#0A2940",
         border=ft.Border.all(
             width=1,
-            color=ft.Colors.with_opacity(0.07, ft.Colors.OUTLINE),
+            color=ft.Colors.with_opacity(0.55, "#2E678D"),
         ),
         shadow=soft_shadow() if elevated else None,
         content=content,
@@ -107,7 +103,7 @@ def page_header(
                         title,
                         size=24,
                         weight=ft.FontWeight.BOLD,
-                        color=ft.Colors.ON_SURFACE,
+                        color=ft.Colors.WHITE,
                     ),
                     ft.Text(
                         subtitle,
@@ -138,7 +134,7 @@ def section_header(
             title,
             size=18,
             weight=ft.FontWeight.BOLD,
-            color=ft.Colors.ON_SURFACE,
+            color=ft.Colors.WHITE,
         ),
     ]
     if subtitle:
@@ -186,7 +182,7 @@ def metric_card(
             value,
             size=23,
             weight=ft.FontWeight.BOLD,
-            color=ft.Colors.ON_SURFACE,
+            color=ft.Colors.WHITE,
         ),
     ]
     if helper:
@@ -197,7 +193,7 @@ def metric_card(
         padding=14,
         radius=22,
         expand=True,
-        bgcolor=ft.Colors.SURFACE_CONTAINER,
+        bgcolor="#0A2940",
     )
 
 
@@ -241,7 +237,7 @@ def empty_state(
             size=17,
             weight=ft.FontWeight.BOLD,
             text_align=ft.TextAlign.CENTER,
-            color=ft.Colors.ON_SURFACE,
+            color=ft.Colors.WHITE,
         ),
         ft.Text(
             subtitle,
@@ -287,7 +283,7 @@ def action_tile(
                             ft.Text(
                                 title,
                                 weight=ft.FontWeight.BOLD,
-                                color=ft.Colors.ON_SURFACE,
+                                color=ft.Colors.WHITE,
                             ),
                             ft.Text(subtitle, size=12, color=MUTED),
                         ],

@@ -411,8 +411,8 @@ def agenda_view(
 
     return ft.ListView(
         expand=True,
-        padding=18,
-        spacing=16,
+        padding=14,
+        spacing=12,
         controls=[
             page_header(
                 "Agenda",

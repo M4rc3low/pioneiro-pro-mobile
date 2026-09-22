@@ -67,8 +67,8 @@ class PioneiroProApp:
         self.nav = ft.NavigationBar(
             selected_index=0,
             on_change=self._on_nav_change,
-            bgcolor="#071A2C",
-            indicator_color=ft.Colors.with_opacity(0.30, ft.Colors.BLUE_500),
+            bgcolor="#061827",
+            indicator_color=ft.Colors.with_opacity(0.42, "#087CF0"),
             elevation=0,
             label_behavior=ft.NavigationBarLabelBehavior.ALWAYS_SHOW,
             destinations=[

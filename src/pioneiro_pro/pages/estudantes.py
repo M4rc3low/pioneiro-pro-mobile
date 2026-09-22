@@ -166,8 +166,8 @@ def estudantes_view(estudantes: EstudanteRepository, on_open) -> ft.Control:
 
     return ft.ListView(
         expand=True,
-        padding=18,
-        spacing=16,
+        padding=14,
+        spacing=12,
         controls=[
             page_header(
                 "Estudantes",
