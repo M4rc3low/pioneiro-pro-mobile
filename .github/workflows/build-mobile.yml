@@ -2,6 +2,12 @@ name: Mobile Build
 
 on:
   workflow_dispatch:
+    inputs:
+      preview:
+        description: "Gerar APK Preview instalável ao lado da versão oficial"
+        required: false
+        type: boolean
+        default: false
   push:
     branches: ["main"]
     tags:
@@ -53,6 +59,19 @@ jobs:
         run: |
           flutter --version
           flet --version
+
+      - name: Configurar identidade Preview
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.preview }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path("pyproject.toml")
+          s = p.read_text(encoding="utf-8")
+          s = s.replace('product = "Pioneiro Pro"', 'product = "Pioneiro Pro Preview"')
+          s = s.replace('bundle_id = "br.com.pioneiropro.app"', 'bundle_id = "br.com.pioneiropro.preview"')
+          p.write_text(s, encoding="utf-8")
+          PY
 
       - name: Gerar projeto Flutter e empacotar Python
         shell: bash
@@ -113,7 +132,7 @@ jobs:
 
           if [ "${{ matrix.target }}" = "apk" ]; then
             cp build/flutter/build/app/outputs/flutter-apk/app-release.apk \
-              "build/apk/Pioneiro-Pro.apk"
+              "build/apk/Pioneiro-Pro-${{ github.event_name == 'workflow_dispatch' && inputs.preview && 'Preview' || 'Build' }}.apk"
           else
             cp build/flutter/build/app/outputs/bundle/release/app-release.aab \
               "build/aab/Pioneiro-Pro.aab"
@@ -122,7 +141,7 @@ jobs:
       - name: Publicar artefato
         uses: actions/upload-artifact@v7
         with:
-          name: pioneiro-pro-${{ matrix.target }}
+          name: pioneiro-pro-${{ matrix.target }}-${{ github.event_name == 'workflow_dispatch' && inputs.preview && 'preview' || 'build' }}
           path: build/${{ matrix.target }}
           if-no-files-found: error
           retention-days: 14
