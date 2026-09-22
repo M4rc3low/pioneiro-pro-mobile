@@ -40,43 +40,55 @@ def _glass(content, padding=16, radius=22, expand=None, on_click=None):
 
 def _metric(title, value, helper, icon, color, on_click=None):
     return _glass(
-        ft.Row(
-            spacing=11,
+        ft.Column(
+            spacing=7,
             controls=[
-                ft.Container(
-                    width=48,
-                    height=48,
-                    border_radius=12,
-                    bgcolor=ft.Colors.with_opacity(0.85, color),
-                    alignment=ft.Alignment.CENTER,
-                    content=ft.Icon(icon, color=ft.Colors.WHITE, size=22),
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    controls=[
+                        ft.Container(
+                            width=42,
+                            height=42,
+                            border_radius=12,
+                            bgcolor=ft.Colors.with_opacity(0.85, color),
+                            alignment=ft.Alignment.CENTER,
+                            content=ft.Icon(icon, color=ft.Colors.WHITE, size=21),
+                        ),
+                        ft.Icon(ft.Icons.CHEVRON_RIGHT_ROUNDED, color="#91B9D6", size=17),
+                    ],
                 ),
-                ft.Container(
-                    expand=True,
-                    content=ft.Column(
-                        spacing=0,
-                        controls=[
-                            ft.Text(title, size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
-                            ft.Row(
-                                spacing=6,
-                                vertical_alignment=ft.CrossAxisAlignment.END,
-                                controls=[
-                                    ft.Text(value, size=21, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
-                                    ft.Text(helper, size=8, color=ft.Colors.WHITE_70),
-                                ],
+                ft.Text(
+                    title,
+                    size=12,
+                    weight=ft.FontWeight.BOLD,
+                    color=ft.Colors.WHITE,
+                    max_lines=1,
+                    overflow=ft.TextOverflow.ELLIPSIS,
+                ),
+                ft.Row(
+                    spacing=6,
+                    vertical_alignment=ft.CrossAxisAlignment.END,
+                    controls=[
+                        ft.Text(value, size=22, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                        ft.Container(
+                            expand=True,
+                            content=ft.Text(
+                                helper,
+                                size=8,
+                                color=ft.Colors.WHITE_70,
+                                max_lines=1,
+                                overflow=ft.TextOverflow.ELLIPSIS,
                             ),
-                        ],
-                    ),
+                        ),
+                    ],
                 ),
-                ft.Icon(ft.Icons.CHEVRON_RIGHT_ROUNDED, color="#91B9D6", size=16),
             ],
         ),
-        padding=11,
+        padding=12,
         radius=18,
         expand=True,
         on_click=on_click,
     )
-
 
 def dashboard_view(
     atividades: AtividadeRepository,
@@ -188,13 +200,13 @@ def dashboard_view(
                 timer_status,
                 ft.Row(
                     alignment=ft.MainAxisAlignment.CENTER,
-                    spacing=16,
+                    spacing=8,
                     controls=[
-                        ft.OutlinedButton("Zerar", icon=ft.Icons.RESTART_ALT_ROUNDED, on_click=zerar_timer),
+                        ft.IconButton(icon=ft.Icons.RESTART_ALT_ROUNDED, icon_color="#8EDCFF", tooltip="Zerar", on_click=zerar_timer),
                         ft.Container(
-                            width=78,
-                            height=78,
-                            border_radius=39,
+                            width=64,
+                            height=64,
+                            border_radius=32,
                             gradient=ft.LinearGradient(colors=["#22C7F2", "#087CF0"]),
                             alignment=ft.Alignment.CENTER,
                             content=ft.IconButton(
@@ -204,7 +216,7 @@ def dashboard_view(
                                 on_click=pausar_timer if cronometro and cronometro.rodando else iniciar_timer,
                             ),
                         ),
-                        ft.OutlinedButton("Registrar", icon=ft.Icons.TIMER_OUTLINED, on_click=lambda _: on_navigate("registrar")),
+                        ft.IconButton(icon=ft.Icons.TIMER_OUTLINED, icon_color="#8EDCFF", tooltip="Registrar", on_click=lambda _: on_navigate("registrar")),
                     ],
                 ),
             ],
