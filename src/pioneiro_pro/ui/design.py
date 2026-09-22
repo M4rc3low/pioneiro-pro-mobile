@@ -66,7 +66,7 @@ def panel(
     content: ft.Control,
     *,
     padding: int = 16,
-    radius: int = 20,
+    radius: int = 16,
     expand: bool | int | None = None,
     bgcolor: str | None = None,
     elevated: bool = False,
