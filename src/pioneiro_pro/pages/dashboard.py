@@ -136,7 +136,7 @@ def dashboard_view(
     # Cronômetro na Home: usa a mesma instância do formulário de registro.
     timer_text = ft.Text(
         cronometro.texto() if cronometro else "00:00:00",
-        size=40,
+        size=48,
         weight=ft.FontWeight.BOLD,
         color=ft.Colors.WHITE,
         text_align=ft.TextAlign.CENTER,
@@ -189,9 +189,9 @@ def dashboard_view(
         page.run_task(atualizar_timer_home)
 
     timer_card = ft.Container(
-        padding=22,
-        border_radius=30,
-        gradient=brand_gradient(),
+        padding=24,
+        border_radius=26,
+        gradient=ft.LinearGradient(colors=["#12385A", "#071A2C"], begin=ft.Alignment.TOP_LEFT, end=ft.Alignment.BOTTOM_RIGHT),
         shadow=ft.BoxShadow(blur_radius=28, spread_radius=0, color=ft.Colors.with_opacity(0.22, ft.Colors.BLUE_900), offset=ft.Offset(0, 10)),
         content=ft.Column(
             spacing=10,
@@ -215,14 +215,14 @@ def dashboard_view(
                     controls=[
                         ft.IconButton(icon=ft.Icons.RESTART_ALT, tooltip="Zerar", on_click=zerar_timer),
                         ft.Container(
-                            width=118,
-                            height=64,
-                            border_radius=32,
-                            bgcolor=ft.Colors.with_opacity(0.24, ft.Colors.WHITE),
+                            width=92,
+                            height=92,
+                            border_radius=46,
+                            gradient=ft.LinearGradient(colors=["#22C7F2", "#087CF0"], begin=ft.Alignment.TOP_LEFT, end=ft.Alignment.BOTTOM_RIGHT),
                             alignment=ft.Alignment.CENTER,
                             content=ft.IconButton(
                                 icon=ft.Icons.PAUSE_ROUNDED if cronometro and cronometro.rodando else ft.Icons.PLAY_ARROW_ROUNDED,
-                                icon_size=34,
+                                icon_size=42,
                                 icon_color=ft.Colors.WHITE,
                                 tooltip="Pausar" if cronometro and cronometro.rodando else "Iniciar",
                                 on_click=pausar_timer if cronometro and cronometro.rodando else iniciar_timer,
@@ -247,9 +247,9 @@ def dashboard_view(
     )
 
     hero = ft.Container(
-        padding=22,
-        border_radius=28,
-        bgcolor=ft.Colors.SURFACE_CONTAINER,
+        padding=20,
+        border_radius=22,
+        bgcolor="#102A40",
         border=ft.Border.all(1, ft.Colors.with_opacity(0.08, ft.Colors.OUTLINE)),
         shadow=ft.BoxShadow(blur_radius=20, spread_radius=0, color=ft.Colors.with_opacity(0.08, ft.Colors.BLACK), offset=ft.Offset(0, 6)),
         content=ft.Column(
@@ -416,8 +416,8 @@ def dashboard_view(
                         ft.Column(
                             spacing=2,
                             controls=[
-                                ft.Text(saudacao + "! 👋", size=30, weight=ft.FontWeight.BOLD),
-                                ft.Text("Que Jeová abençoe seu dia de serviço!", size=12, color=ft.Colors.ON_SURFACE_VARIANT),
+                                ft.Text(saudacao + "! 👋", size=28, weight=ft.FontWeight.BOLD),
+                                ft.Text("Mais organização para servir Jeová", size=12, color=ft.Colors.ON_SURFACE_VARIANT),
                             ],
                         ),
                         icon_badge(ft.Icons.NOTIFICATIONS_NONE_ROUNDED, color=ACCENT),
