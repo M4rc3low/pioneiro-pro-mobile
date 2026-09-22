@@ -144,7 +144,7 @@ def dashboard_view(
     timer_status = ft.Text(
         "Em atividade" if cronometro and cronometro.rodando else "Pronto para iniciar",
         size=11,
-        color=ft.Colors.BLUE_100,
+        color=ft.Colors.ON_SURFACE_VARIANT,
     )
 
     async def atualizar_timer_home() -> None:
@@ -189,9 +189,10 @@ def dashboard_view(
         page.run_task(atualizar_timer_home)
 
     timer_card = ft.Container(
-        padding=20,
-        border_radius=26,
+        padding=22,
+        border_radius=30,
         gradient=brand_gradient(),
+        shadow=ft.BoxShadow(blur_radius=28, spread_radius=0, color=ft.Colors.with_opacity(0.22, ft.Colors.BLUE_900), offset=ft.Offset(0, 10)),
         content=ft.Column(
             spacing=10,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -213,10 +214,19 @@ def dashboard_view(
                     spacing=14,
                     controls=[
                         ft.IconButton(icon=ft.Icons.RESTART_ALT, tooltip="Zerar", on_click=zerar_timer),
-                        ft.FilledButton(
-                            "Pausar" if cronometro and cronometro.rodando else "Iniciar",
-                            icon=ft.Icons.PAUSE if cronometro and cronometro.rodando else ft.Icons.PLAY_ARROW,
-                            on_click=pausar_timer if cronometro and cronometro.rodando else iniciar_timer,
+                        ft.Container(
+                            width=118,
+                            height=64,
+                            border_radius=32,
+                            bgcolor=ft.Colors.with_opacity(0.24, ft.Colors.WHITE),
+                            alignment=ft.Alignment.CENTER,
+                            content=ft.IconButton(
+                                icon=ft.Icons.PAUSE_ROUNDED if cronometro and cronometro.rodando else ft.Icons.PLAY_ARROW_ROUNDED,
+                                icon_size=34,
+                                icon_color=ft.Colors.WHITE,
+                                tooltip="Pausar" if cronometro and cronometro.rodando else "Iniciar",
+                                on_click=pausar_timer if cronometro and cronometro.rodando else iniciar_timer,
+                            ),
                         ),
                         ft.IconButton(
                             icon=ft.Icons.ADD_TASK,
@@ -228,8 +238,8 @@ def dashboard_view(
                 ft.Row(
                     spacing=8,
                     controls=[
-                        ft.Container(expand=True, content=ft.OutlinedButton("Adicionar local", icon=ft.Icons.LOCATION_ON_OUTLINED, on_click=lambda _: on_navigate("agenda"))),
-                        ft.Container(expand=True, content=ft.OutlinedButton("Registrar", icon=ft.Icons.EDIT_NOTE, on_click=lambda _: on_navigate("registrar"))),
+                        ft.Container(expand=True, height=54, border_radius=18, bgcolor=ft.Colors.with_opacity(0.14, ft.Colors.WHITE), content=ft.TextButton("Adicionar local", icon=ft.Icons.LOCATION_ON_OUTLINED, style=ft.ButtonStyle(color=ft.Colors.WHITE), on_click=lambda _: on_navigate("agenda"))),
+                        ft.Container(expand=True, height=54, border_radius=18, bgcolor=ft.Colors.with_opacity(0.14, ft.Colors.WHITE), content=ft.TextButton("Registrar", icon=ft.Icons.EDIT_NOTE, style=ft.ButtonStyle(color=ft.Colors.WHITE), on_click=lambda _: on_navigate("registrar"))),
                     ],
                 ),
             ],
@@ -238,8 +248,10 @@ def dashboard_view(
 
     hero = ft.Container(
         padding=22,
-        border_radius=26,
-        gradient=brand_gradient(),
+        border_radius=28,
+        bgcolor=ft.Colors.SURFACE_CONTAINER,
+        border=ft.Border.all(1, ft.Colors.with_opacity(0.08, ft.Colors.OUTLINE)),
+        shadow=ft.BoxShadow(blur_radius=20, spread_radius=0, color=ft.Colors.with_opacity(0.08, ft.Colors.BLACK), offset=ft.Offset(0, 6)),
         content=ft.Column(
             spacing=12,
             controls=[
@@ -252,33 +264,33 @@ def dashboard_view(
                                 ft.Text(
                                     "Meta mensal",
                                     size=13,
-                                    color=ft.Colors.BLUE_100,
+                                    color=ft.Colors.ON_SURFACE_VARIANT,
                                 ),
                                 ft.Text(
                                     formatar_minutos(total),
                                     size=32,
                                     weight=ft.FontWeight.BOLD,
-                                    color=ft.Colors.WHITE,
+                                    color=ft.Colors.ON_SURFACE,
                                 ),
                             ],
                         ),
                         ft.Container(
                             padding=12,
                             border_radius=16,
-                            bgcolor=ft.Colors.BLUE_600,
+                            bgcolor=ft.Colors.with_opacity(0.12, ACCENT),
                             content=ft.Text(
                                 f"{percentual}%",
                                 size=18,
                                 weight=ft.FontWeight.BOLD,
-                                color=ft.Colors.WHITE,
+                                color=ACCENT,
                             ),
                         ),
                     ],
                 ),
                 ft.ProgressBar(
                     value=progresso,
-                    color=ft.Colors.WHITE,
-                    bgcolor=ft.Colors.BLUE_500,
+                    color=ACCENT,
+                    bgcolor=ft.Colors.with_opacity(0.12, ACCENT),
                 ),
                 ft.Row(
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -286,7 +298,7 @@ def dashboard_view(
                         ft.Text(
                             periodo,
                             size=11,
-                            color=ft.Colors.BLUE_100,
+                            color=ft.Colors.ON_SURFACE_VARIANT,
                         ),
                         ft.Text(
                             (
@@ -295,7 +307,7 @@ def dashboard_view(
                                 else "Sem meta definida"
                             ),
                             size=11,
-                            color=ft.Colors.BLUE_100,
+                            color=ft.Colors.ON_SURFACE_VARIANT,
                         ),
                     ],
                 ),
@@ -363,7 +375,7 @@ def dashboard_view(
         spacing=16,
         controls=[
             ft.Container(
-                padding=ft.Padding.symmetric(horizontal=4, vertical=6),
+                padding=ft.Padding.symmetric(horizontal=4, vertical=8),
                 content=ft.Row(
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
@@ -371,8 +383,8 @@ def dashboard_view(
                         ft.Column(
                             spacing=2,
                             controls=[
-                                ft.Text(saudacao + "! 👋", size=27, weight=ft.FontWeight.BOLD),
-                                ft.Text("Seu serviço, suas metas e sua agenda em um só lugar.", size=11, color=ft.Colors.GREY_500),
+                                ft.Text(saudacao + "! 👋", size=30, weight=ft.FontWeight.BOLD),
+                                ft.Text("Que seu dia de serviço seja produtivo e bem organizado.", size=12, color=ft.Colors.ON_SURFACE_VARIANT),
                             ],
                         ),
                         icon_badge(ft.Icons.NOTIFICATIONS_NONE_ROUNDED, color=ACCENT),
