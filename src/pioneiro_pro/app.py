@@ -67,8 +67,8 @@ class PioneiroProApp:
         self.nav = ft.NavigationBar(
             selected_index=0,
             on_change=self._on_nav_change,
-            bgcolor=ft.Colors.SURFACE,
-            indicator_color=ft.Colors.with_opacity(0.20, ft.Colors.BLUE_500),
+            bgcolor="#071A2C",
+            indicator_color=ft.Colors.with_opacity(0.30, ft.Colors.BLUE_500),
             elevation=0,
             label_behavior=ft.NavigationBarLabelBehavior.ALWAYS_SHOW,
             destinations=[
@@ -105,13 +105,13 @@ class PioneiroProApp:
 
         self.page.title = "Pioneiro Pro"
         self.page.padding = 0
-        self.page.bgcolor = ft.Colors.with_opacity(0.98, ft.Colors.SURFACE)
+        self.page.bgcolor = "#061827"
         self.page.theme_mode = (
             ft.ThemeMode.DARK if config["tema"] == "escuro" else ft.ThemeMode.LIGHT
         )
         self.page.theme = ft.Theme(
             color_scheme_seed=ft.Colors.BLUE_600,
-            scaffold_bgcolor=ft.Colors.SURFACE,
+            scaffold_bgcolor="#061827",
         )
         self.page.on_app_lifecycle_state_change = self._on_lifecycle
         self._configurar_geolocalizacao()
@@ -383,7 +383,7 @@ class PioneiroProApp:
                                 weight=ft.FontWeight.BOLD,
                             ),
                             ft.Text(
-                                "Organização hoje • Mais tempo para o que importa",
+                                "Mais organização para servir Jeová",
                                 size=10,
                                 color=ft.Colors.GREY_500,
                             ),
