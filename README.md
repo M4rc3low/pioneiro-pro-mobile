@@ -1,5 +1,13 @@
 # Pioneiro Pro Mobile
 
+<!-- portfolio-cover:start -->
+<div align="center">
+  <img src="https://raw.githubusercontent.com/M4rc3low/M4rc3low.github.io/main/assets/projects/pioneiro-pro-mobile.svg" alt="Capa conceitual ilustrativa do projeto pioneiro-pro-mobile" width="920">
+</div>
+
+> **Capa visual ilustrativa:** representa o conceito do projeto; não é uma captura da aplicação em execução. Veja a [galeria visual completa](https://m4rc3low.github.io/projetos.html).
+<!-- portfolio-cover:end -->
+
 [![CI](https://github.com/M4rc3low/pioneiro-pro-mobile/actions/workflows/ci.yml/badge.svg)](https://github.com/M4rc3low/pioneiro-pro-mobile/actions/workflows/ci.yml)
 [![Mobile Build](https://github.com/M4rc3low/pioneiro-pro-mobile/actions/workflows/build-mobile.yml/badge.svg)](https://github.com/M4rc3low/pioneiro-pro-mobile/actions/workflows/build-mobile.yml)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
